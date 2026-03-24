@@ -1,0 +1,41 @@
+[
+  {
+    "id": "a4c1ebf2-e7d8-4884-908d-4b2290662e68",
+    "display_name": "gpt-4.1-mini",
+    "provider": "openai",
+    "model_name": "gpt-4.1-mini",
+    "api_key": "",
+    "size": "small",
+    "cost_per_1m_input_tokens": 0.4,
+    "cost_per_1m_output_tokens": 1.6,
+    "max_tokens": 512,
+    "temperature": 0.0,
+    "enabled": true
+  },
+  {
+    "id": "b0002106-4fe6-4f88-9330-9663264f7f6c",
+    "display_name": "gpt-4.1-mini",
+    "provider": "openai",
+    "model_name": "gpt-4.1-mini",
+    "api_key": "",
+    "size": "large",
+    "cost_per_1m_input_tokens": 0.4,
+    "cost_per_1m_output_tokens": 1.6,
+    "max_tokens": 512,
+    "temperature": 0.0,
+    "enabled": true
+  },
+  {
+    "id": "4b8bf021-1850-4fdc-8c0b-ba678227d725",
+    "display_name": "gpt-5",
+    "provider": "openai",
+    "model_name": "gpt-5",
+    "api_key": "",
+    "size": "large",
+    "cost_per_1m_input_tokens": 2.0,
+    "cost_per_1m_output_tokens": 8.0,
+    "max_tokens": 4096,
+    "temperature": 0.0,
+    "enabled": true
+  }
+]

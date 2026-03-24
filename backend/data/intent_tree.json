@@ -1,0 +1,38 @@
+{
+  "Customer Support": {
+    "Orders": ["Track Order", "Cancel Order", "Modify Order"],
+    "Refunds & Returns": ["Initiate Return", "Return Status", "Return Item"],
+    "Account Issues": ["Login Help", "Reset Password", "Update Account"],
+    "Payments": ["Payment Failed", "Billing Inquiry", "Invoice Request"],
+    "Product Queries": ["Product Details", "Check Availability", "Pricing Info"]
+  },
+  "Travel": {
+    "Booking > Flights": ["Cheapest Flight", "Fastest Flight", "Flight Status"],
+    "Booking > Hotels": ["Budget Hotel", "Luxury Hotel", "Hotel Availability"],
+    "Planning": ["Itinerary Planning", "Travel Recommendations", "Budget Planning"],
+    "Documentation": ["Visa Information", "Passport Inquiry"]
+  },
+  "Coding": {
+    "Debugging": ["Debug Python", "Debug JavaScript", "Runtime Error"],
+    "Code Generation": ["Generate Function", "Write Script", "API Integration"],
+    "System Design": ["Low Level Design", "High Level Design"]
+  },
+  "Healthcare": {
+    "Symptoms": ["Mild Symptoms", "Severe Symptoms", "Chronic Condition"],
+    "Medication": ["Drug Information", "Dosage Query"],
+    "Lifestyle": ["Diet Advice", "Fitness Advice"]
+  },
+  "Finance": {
+    "Banking": ["Check Balance", "Block Card", "Transaction History"],
+    "Investments": ["Stock Query", "Portfolio Review"],
+    "Taxes": ["Tax Filing", "Tax Deductions"]
+  },
+  "Education": {
+    "Learning": ["Concept Explanation", "Tutorial Request"],
+    "Exams": ["Exam Preparation", "Practice Questions"],
+    "Assignments": ["Homework Help", "Project Help"]
+  },
+  "General": {
+    "Miscellaneous": ["Unknown Query", "Ambiguous Query", "Multi-intent Query"]
+  }
+}
