@@ -82,9 +82,11 @@ class ModelConfigSchema(BaseModel):
     size: Literal["small", "large"]
     cost_per_1m_input_tokens: float = 0.0
     cost_per_1m_output_tokens: float = 0.0
-    max_tokens: int = 512
+    max_tokens: int = 4096
     temperature: float = 0.0
     enabled: bool = True
+    # Set to False for models that don't support JSON mode (e.g. GPT-5, o-series)
+    use_json_mode: bool = True
 
 
 class ModelConfigCreate(BaseModel):
@@ -95,9 +97,10 @@ class ModelConfigCreate(BaseModel):
     size: Literal["small", "large"]
     cost_per_1m_input_tokens: float = 0.0
     cost_per_1m_output_tokens: float = 0.0
-    max_tokens: int = 512
+    max_tokens: int = 4096
     temperature: float = 0.0
     enabled: bool = True
+    use_json_mode: bool = True
 
 
 class TestCaseSchema(BaseModel):
