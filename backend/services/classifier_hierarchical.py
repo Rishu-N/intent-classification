@@ -56,12 +56,15 @@ async def _call_single_model(
             # Try case-insensitive match
             lower_map = {c.lower(): c for c in candidates}
             choice = lower_map.get(choice.lower(), candidates[0])
+        tokens = resp.tokens
         return VoteSchema(
             model_id=model.id,
             choice=choice,
             confidence=normalize(parsed.get("confidence", 0.5)),
             reasoning=parsed.get("reasoning", ""),
             raw_output=resp.content,
+            tokens=tokens,
+            cost_usd=compute_cost(model, tokens),
         )
     except LLMCallError as exc:
         logger.error("Model %s failed at level %s: %s", model.id, level, exc)
@@ -80,7 +83,7 @@ async def _classify_level(
     backup_model: Optional[ModelConfigSchema] = None,
     descriptions: dict[str, str] = {},
     examples_map: dict[str, list[str]] = {},
-) -> tuple[ClassifyStepSchema, bool, Optional[str]]:
+) -> tuple[ClassifyStepSchema, bool, Optional[str], float]:
     """
     Returns (step, fallback_triggered, fallback_reason).
     """
@@ -161,6 +164,13 @@ async def _classify_level(
 
     latency_ms = int((time.monotonic() - level_start) * 1000)
 
+    # Aggregate tokens and cost from all votes at this level
+    total_tokens = TokenUsage(
+        input=sum(v.tokens.input for v in votes),
+        output=sum(v.tokens.output for v in votes),
+    )
+    total_cost = sum(v.cost_usd for v in votes)
+
     step = ClassifyStepSchema(
         level=level,
         chosen=chosen,
@@ -172,7 +182,7 @@ async def _classify_level(
         latency_ms=latency_ms,
         tokens=total_tokens,
     )
-    return step, fallback_triggered, fallback_reason
+    return step, fallback_triggered, fallback_reason, total_cost
 
 
 async def classify_hierarchical(
@@ -199,7 +209,7 @@ async def classify_hierarchical(
     # Level 1: Domain
     domain_descs = intent_tree_store.get_domains_with_desc()
     domain_examples = {d: intent_tree_store.get_domain_examples(d) for d in domains}
-    step1, fb1, fr1 = await _classify_level(
+    step1, fb1, fr1, cost1 = await _classify_level(
         query, domains, "domain", models, ensemble_method, confidence_threshold,
         backup_model=backup_model, descriptions=domain_descs, examples_map=domain_examples,
     )
@@ -209,7 +219,7 @@ async def classify_hierarchical(
     categories = list(tree.get(chosen_domain, {FALLBACK_CATEGORY: []}).keys())
     category_descs = intent_tree_store.get_categories_with_desc(chosen_domain)
     category_examples = {c: intent_tree_store.get_category_examples(chosen_domain, c) for c in categories}
-    step2, fb2, fr2 = await _classify_level(
+    step2, fb2, fr2, cost2 = await _classify_level(
         query, categories, "category", models, ensemble_method, confidence_threshold,
         chosen_domain=chosen_domain, backup_model=backup_model,
         descriptions=category_descs, examples_map=category_examples,
@@ -221,7 +231,7 @@ async def classify_hierarchical(
     intents_full = intent_tree_store.get_intents_full(chosen_domain, chosen_category)
     intent_descs = {name: data.get("description", "") for name, data in intents_full.items()}
     intent_examples = {name: data.get("examples", []) for name, data in intents_full.items()}
-    step3, fb3, fr3 = await _classify_level(
+    step3, fb3, fr3, cost3 = await _classify_level(
         query, intents, "intent", models, ensemble_method, confidence_threshold,
         chosen_domain=chosen_domain, chosen_category=chosen_category,
         backup_model=backup_model, descriptions=intent_descs, examples_map=intent_examples,
@@ -239,6 +249,12 @@ async def classify_hierarchical(
         1 if fb1 else (2 if fb2 else (3 if fb3 else None))
     )
 
+    total_cost_usd = sum_costs([cost1, cost2, cost3])
+    tokens_total = TokenUsage(
+        input=sum(s.tokens.input for s in steps),
+        output=sum(s.tokens.output for s in steps),
+    )
+
     result = HierarchicalResultSchema(
         query=query,
         final_intent=step3.chosen,
@@ -248,8 +264,8 @@ async def classify_hierarchical(
         min_step_confidence=round(min_conf, 4),
         steps=steps,
         total_latency_ms=total_latency_ms,
-        total_cost_usd=0.0,  # Token counts aggregated per model inside steps
-        tokens_total=TokenUsage(),
+        total_cost_usd=total_cost_usd,
+        tokens_total=tokens_total,
         fallback_triggered=fallback_triggered,
         fallback_reason=fallback_reason,
         fallback_step_used=fallback_step,

@@ -42,6 +42,8 @@ export interface Vote {
   confidence: number;
   reasoning: string;
   raw_output?: string;
+  tokens?: TokenUsage;
+  cost_usd?: number;
 }
 
 export interface ClassifyStep {

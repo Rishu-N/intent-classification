@@ -17,6 +17,8 @@ class VoteSchema(BaseModel):
     confidence: float
     reasoning: str
     raw_output: str = ""
+    tokens: TokenUsage = Field(default_factory=TokenUsage)
+    cost_usd: float = 0.0
 
 
 class ClassifyStepSchema(BaseModel):

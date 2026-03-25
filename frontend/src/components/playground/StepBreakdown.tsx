@@ -17,6 +17,9 @@ function VoteRow({ vote, isWinner }: { vote: Vote; isWinner: boolean }) {
             → {vote.choice}
           </span>
           <ConfidenceBadge value={vote.confidence} size="sm" />
+          {vote.cost_usd !== undefined && vote.cost_usd > 0 && (
+            <span className="text-xs text-slate-400">${vote.cost_usd.toFixed(6)}</span>
+          )}
         </div>
         <div className="flex items-center gap-2">
           <span className="text-slate-400 truncate max-w-48">{vote.reasoning}</span>
