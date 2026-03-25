@@ -3,8 +3,9 @@ import { TabBar } from './components/layout/TabBar';
 import { PlaygroundPage } from './components/playground/PlaygroundPage';
 import { TestCasesPage } from './components/testcases/TestCasesPage';
 import { ModelsPage } from './components/models/ModelsPage';
+import { IntentTreePage } from './components/intents/IntentTreePage';
 
-type TabId = 'playground' | 'testcases' | 'models';
+type TabId = 'playground' | 'testcases' | 'models' | 'intents';
 
 function App() {
   const [activeTab, setActiveTab] = useState<TabId>('playground');
@@ -32,6 +33,7 @@ function App() {
         {activeTab === 'playground' && <PlaygroundPage />}
         {activeTab === 'testcases' && <TestCasesPage />}
         {activeTab === 'models' && <ModelsPage />}
+        {activeTab === 'intents' && <IntentTreePage />}
       </main>
     </div>
   );
