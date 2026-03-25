@@ -1,38 +1,404 @@
 {
   "Customer Support": {
-    "Orders": ["Track Order", "Cancel Order", "Modify Order"],
-    "Refunds & Returns": ["Initiate Return", "Return Status", "Return Item"],
-    "Account Issues": ["Login Help", "Reset Password", "Update Account"],
-    "Payments": ["Payment Failed", "Billing Inquiry", "Invoice Request"],
-    "Product Queries": ["Product Details", "Check Availability", "Pricing Info"]
+    "description": "Covers all queries from users who have already interacted with an e-commerce or service platform — placed orders, made purchases, created accounts, or are actively considering a product. The defining trait is a transactional or account relationship with the platform. CHOOSE THIS DOMAIN for: order tracking/cancellation/modification, returns and refunds, login/account problems, failed payments, billing questions, and product information for purchasing decisions. DO NOT CHOOSE THIS for: general financial advice (→ Finance), general coding help (→ Coding), general medical info (→ Healthcare), or academic learning (→ Education). Key signals: 'my order', 'my account', 'I purchased', 'delivery', 'refund', 'can't log in', 'payment failed', 'how much does X cost', 'is X in stock'.",
+    "examples": ["Where is my order?", "I want to return this item", "I can't log in to my account", "My payment was declined", "Is this product available in red?"],
+    "categories": {
+      "Orders": {
+        "description": "Questions about orders that have already been placed and exist in the system with an order ID or confirmation. The user has committed to a purchase and is now inquiring about or acting on that specific order. CHOOSE THIS for: tracking, cancellation, or modification of existing orders. Key signals: 'my order', 'order #', 'order status', 'I ordered', 'package', 'shipment', 'delivery'. DO NOT CHOOSE THIS for: products the user hasn't purchased yet (→ Product Queries), money-back requests after delivery (→ Refunds & Returns), or general payment problems (→ Payments).",
+        "examples": ["Where is my package?", "Cancel my order", "Change the address on my order", "My order hasn't arrived yet", "Order status for #XYZ"],
+        "intents": {
+          "Track Order": {
+            "description": "The user wants to know the current location, shipping status, or estimated arrival time of an order they already placed. They are not trying to change or cancel the order — they just want information about where it is. SIGNALS: 'where is my order/package', 'track my order', 'when will it arrive/be delivered', 'has it shipped yet', 'tracking number', 'estimated delivery', 'out for delivery', 'in transit', 'USPS/FedEx/UPS update'. DISTINGUISH: Unlike Cancel Order (action to stop), this is a passive information request. Unlike Return Status (about a return already initiated), this is about an order going forward. If the user says 'where is my order — I want to cancel it', prefer Cancel Order since that is the primary action.",
+            "examples": ["Where is my package?", "When will my order arrive?", "Has order #12345 shipped yet?", "Can you give me the tracking link?", "My delivery was supposed to arrive today, where is it?", "What's the status of my order?"]
+          },
+          "Cancel Order": {
+            "description": "The user explicitly wants to stop, abort, or reverse a placed order before it is fulfilled or delivered. This is an ACTION request. SIGNALS: 'cancel my order', 'stop my order', 'I don't want it anymore', 'cancel order #XYZ', 'please cancel', 'I changed my mind', 'undo my purchase', 'don't ship it'. DISTINGUISH: Unlike Track Order (passive status check), this is a decisive action. Unlike Modify Order (changing details), this is full cancellation. If the user asks both 'where is it and I want to cancel', classify as Cancel Order — the action dominates.",
+            "examples": ["I want to cancel my order", "Please cancel order #789", "I changed my mind, don't ship it", "Can I still cancel?", "Stop my order immediately", "I don't want this anymore — cancel it"]
+          },
+          "Modify Order": {
+            "description": "The user wants to change a specific detail of an existing, not-yet-shipped order without cancelling it entirely. Changes include: delivery address, item variant (size, color), quantity, shipping speed upgrade, or adding/removing items. SIGNALS: 'change my order', 'update my address', 'wrong address', 'can I change the size/color', 'different quantity', 'upgrade shipping', 'edit my order', 'I made a mistake on'. DISTINGUISH: Unlike Cancel Order (full termination), this is a partial change. Unlike Track Order (no action needed), this involves modifying the order record. If the user wants to change and then cancel, prefer Cancel Order.",
+            "examples": ["I put the wrong address on my order", "Can I change the size from M to L?", "Update delivery address for order #321", "I ordered the wrong color, can I fix it?", "Can I add another item to my order?", "Upgrade my shipping to express please"]
+          }
+        }
+      },
+      "Refunds & Returns": {
+        "description": "Queries specifically about reversing a purchase after the product has been received — getting money back, sending the product back, or checking on a return in progress. The product has typically already been delivered. CHOOSE THIS for: initiating a return/refund, checking return progress, understanding how to physically send an item back. Key signals: 'return', 'refund', 'send back', 'exchange', 'I received the wrong item', 'damaged product', 'money back'. DO NOT CHOOSE THIS for: order not yet delivered problems (→ Orders), payment disputes about charges (→ Payments).",
+        "examples": ["I want to return this", "When will I get my refund?", "How do I send this back?", "I got a damaged item, I want a refund", "Status of my return"],
+        "intents": {
+          "Initiate Return": {
+            "description": "The user wants to START the return or refund process for a product they have received. They have not yet begun the process — this is the first step. SIGNALS: 'I want to return', 'how do I get a refund', 'start a return', 'return request', 'I want my money back', 'this is not what I ordered', 'wrong item', 'damaged on arrival', 'I want to exchange this'. DISTINGUISH: Unlike Return Status (process already started, user checking progress), this is the initiation of a new return. Unlike Return Item (logistics of physically shipping it back), this is about triggering the return in the system.",
+            "examples": ["I want to return this product", "I received a damaged item, I want a refund", "How do I start a return?", "This isn't what I ordered, I want my money back", "I'd like to exchange this for a different size", "Can I get a refund for my purchase?"]
+          },
+          "Return Status": {
+            "description": "The user has already initiated a return and wants to know its current status — whether it has been received by the warehouse, when the refund will be credited, or what stage the return is in. SIGNALS: 'status of my return', 'when will I get my refund', 'has my return been processed', 'I already sent it back', 'return #', 'where is my refund', 'refund timeline', 'how long does the refund take'. DISTINGUISH: Unlike Initiate Return (starting a new one), this is about tracking an already-started return. Unlike Track Order (tracking a forward shipment), this is about tracking a reverse shipment or refund credit.",
+            "examples": ["Where is my refund?", "I returned the item 5 days ago, when do I get my money back?", "Has my return been received?", "Status of return #456", "My refund is taking too long", "How long will my return take to process?"]
+          },
+          "Return Item": {
+            "description": "The user needs practical, logistical instructions on HOW to physically send an item back — packaging requirements, return label, drop-off locations, courier options. They may have the return approved but need the step-by-step of getting it back to the seller. SIGNALS: 'how do I send it back', 'return label', 'drop off location', 'how to pack the item', 'return shipping', 'prepaid label', 'where do I drop off the return', 'return instructions'. DISTINGUISH: Unlike Initiate Return (triggering the process in the system), this is about the physical act of returning the product. Unlike Return Status (checking progress), this is about what to do next.",
+            "examples": ["How do I ship this back?", "Where can I drop off my return?", "Can I get a return label?", "How do I pack the item for return?", "What courier should I use to return this?", "Do I need the original packaging to return?"]
+          }
+        }
+      },
+      "Account Issues": {
+        "description": "Problems or requests related to the user's personal account on the platform — authentication failures, password management, or updating stored personal information. CHOOSE THIS when the issue is about accessing or maintaining the user's account itself, not about a specific order or product. Key signals: 'can't log in', 'account locked', 'forgot password', 'change my email/address/phone', 'account suspended', 'my profile'. DO NOT CHOOSE THIS for: payment problems (→ Payments), order problems (→ Orders).",
+        "examples": ["I can't log in", "I forgot my password", "Update my email address", "My account is locked", "Change my phone number on file"],
+        "intents": {
+          "Login Help": {
+            "description": "The user cannot access their account due to authentication failures, account lockouts, unrecognized credentials, two-factor authentication issues, or a blocked/suspended account. SIGNALS: 'can't log in', 'account locked', 'login not working', 'says wrong password but I know it's right', 'my account is blocked/suspended', '2FA not working', 'sign in issue', 'access denied', 'forgot my username'. DISTINGUISH: Unlike Reset Password (user knows they need a reset), this is broader — the user may not know why login is failing. If the user says 'can't log in, need to reset password', prefer Reset Password since the action is clear.",
+            "examples": ["I can't log in to my account", "My account appears to be locked", "2FA code isn't working", "I keep getting 'invalid credentials'", "I'm locked out of my account", "Sign in isn't working for me"]
+          },
+          "Reset Password": {
+            "description": "The user explicitly wants to reset, recover, or change their password. They know the password is the problem. SIGNALS: 'forgot my password', 'reset password', 'password reset link', 'change my password', 'password expired', 'security reset', 'I think my account was hacked — change password'. DISTINGUISH: Unlike Login Help (unclear why they can't get in), this is specifically about the password. Even if they say 'can't log in and need to reset password', classify as Reset Password since the intent is explicit.",
+            "examples": ["I forgot my password", "Send me a password reset link", "How do I reset my password?", "I want to change my password", "My password expired, how do I set a new one?", "I think my account was hacked, reset my password"]
+          },
+          "Update Account": {
+            "description": "The user wants to change stored personal information in their account profile — email, phone number, delivery address, name, date of birth, notification preferences, or linked payment methods. SIGNALS: 'update my profile', 'change my email', 'new phone number', 'update my address', 'change my name', 'edit my account details', 'update billing address', 'change notification settings'. DISTINGUISH: Unlike Login Help/Reset Password (access problems), this is about editing information when the user IS already logged in or just wants to change stored data.",
+            "examples": ["I want to change my email address", "Update my phone number", "Change my delivery address", "Edit my profile name", "Update my billing address", "I moved, please update my address"]
+          }
+        }
+      },
+      "Payments": {
+        "description": "Issues and inquiries directly related to financial transactions on the platform — failed charges, unexplained charges, billing cycles, and documentation of transactions. CHOOSE THIS when the core issue is money moving (or failing to move) between the user and the platform. Key signals: 'payment failed', 'charge', 'billed', 'invoice', 'receipt', 'billing', 'transaction declined', 'overcharged'. DO NOT CHOOSE THIS for: product pricing before purchase (→ Product Queries), refunds for returned items (→ Refunds & Returns), bank account/card management unrelated to the platform (→ Finance > Banking).",
+        "examples": ["My payment didn't go through", "I was charged twice", "I need an invoice for my order", "Why was I billed for this?", "My card was declined"],
+        "intents": {
+          "Payment Failed": {
+            "description": "A payment attempt was declined, failed, or did not complete successfully. The user is trying to resolve why their payment was not processed and how to complete it. SIGNALS: 'payment failed', 'payment declined', 'transaction failed', 'could not charge my card', 'payment not going through', 'order not placed due to payment', 'card declined', 'payment error'. DISTINGUISH: Unlike Billing Inquiry (questioning an existing charge), this is about a charge that never went through. Unlike Invoice Request (documentation), this is about fixing a failed transaction.",
+            "examples": ["My payment failed", "My card was declined at checkout", "Payment isn't going through", "Transaction failed, I can't place the order", "I tried to pay but it keeps failing", "Payment error on my order"]
+          },
+          "Billing Inquiry": {
+            "description": "The user has a question about an existing charge — they see something on their bill they don't understand, think they were overcharged, want to know what a charge is for, or have questions about their billing cycle or subscription renewal. SIGNALS: 'what is this charge', 'I was overcharged', 'unexpected charge', 'billing question', 'subscription charge', 'why was I billed', 'double charged', 'billing cycle', 'when is my next bill'. DISTINGUISH: Unlike Payment Failed (transaction didn't complete), this is about a charge that DID go through but the user questions it. Unlike Invoice Request (just needs a document), this is an active inquiry or dispute.",
+            "examples": ["Why was I charged $X?", "I was billed twice for the same order", "What is this mysterious charge on my account?", "I was overcharged", "When is my next subscription billing?", "I don't recognize this charge"]
+          },
+          "Invoice Request": {
+            "description": "The user needs a formal receipt, invoice, or proof-of-payment document for a specific transaction — typically for expense reporting, tax purposes, or business reimbursement. SIGNALS: 'need an invoice', 'send me a receipt', 'invoice for my order', 'proof of purchase', 'tax invoice', 'official receipt', 'GST/VAT invoice', 'business expense receipt', 'download invoice'. DISTINGUISH: Unlike Billing Inquiry (questioning a charge), this is not about disputing anything — the user simply needs the document. Unlike Payment Failed (fixing a failure), the transaction has already succeeded.",
+            "examples": ["I need an invoice for my order", "Send me a receipt for my purchase", "I need proof of purchase for my expense report", "Can I get a GST invoice?", "Please email me the invoice for order #123", "I need official documentation of this payment"]
+          }
+        }
+      },
+      "Product Queries": {
+        "description": "Requests for information to help a user make or inform a purchasing decision — details about a product they are considering buying but have NOT yet ordered. CHOOSE THIS when the user is in pre-purchase research mode. Key signals: 'what does X do', 'is X compatible with', 'does it come in', 'how much is X', 'is X available'. DO NOT CHOOSE THIS for: products already ordered (→ Orders), general educational questions about a topic (→ Education).",
+        "examples": ["What are the specs for this laptop?", "Is this available in size 10?", "How much does the premium plan cost?", "Is this product waterproof?", "Is the blue version in stock?"],
+        "intents": {
+          "Product Details": {
+            "description": "The user wants specific factual information about a product — specifications, materials, dimensions, compatibility, features, or how it works — to inform a purchase decision. SIGNALS: 'what are the specs', 'dimensions of', 'is it compatible with', 'what material is it made of', 'does it have X feature', 'how does it work', 'technical specifications', 'what's included in the box', 'is it waterproof/wireless/etc'. DISTINGUISH: Unlike Pricing Info (about cost), this is about product features. Unlike Check Availability (about stock), this is about product attributes.",
+            "examples": ["What are the specs of this laptop?", "Is this headphone compatible with iPhone?", "What material is this bag made of?", "Does the device support Bluetooth 5.0?", "What's included in the box?", "Is this phone waterproof?"]
+          },
+          "Check Availability": {
+            "description": "The user wants to know if a specific product is currently in stock, available in their region, or available in a particular variant (size, color, model). SIGNALS: 'is this in stock', 'available in my area', 'when will it be back in stock', 'do you have size X', 'available in blue', 'out of stock', 'can I get this in', 'stock level', 'availability check'. DISTINGUISH: Unlike Product Details (what the product is like), this is purely about whether/when it can be purchased. Unlike Pricing Info (how much), this is about existence of supply.",
+            "examples": ["Is this available in size 10?", "Do you have this in black?", "Is this in stock?", "When will this be back in stock?", "Can I get this delivered to Canada?", "Is the 256GB version available?"]
+          },
+          "Pricing Info": {
+            "description": "The user wants to know the current price, applicable discounts, sale price, or cost breakdown for a product or service before buying. SIGNALS: 'how much does X cost', 'what's the price of', 'is there a discount', 'sale price', 'pricing for', 'how much is shipping', 'price comparison', 'current offer', 'coupon', 'price drop'. DISTINGUISH: Unlike Product Details (features), this is about cost. Unlike Billing Inquiry (a charge that already happened), this is pre-purchase pricing research.",
+            "examples": ["How much does this cost?", "Is there a discount on this item?", "What's the price of the pro plan?", "How much is express shipping?", "Is this item on sale?", "Do you have a coupon for this?"]
+          }
+        }
+      }
+    }
   },
   "Travel": {
-    "Booking > Flights": ["Cheapest Flight", "Fastest Flight", "Flight Status"],
-    "Booking > Hotels": ["Budget Hotel", "Luxury Hotel", "Hotel Availability"],
-    "Planning": ["Itinerary Planning", "Travel Recommendations", "Budget Planning"],
-    "Documentation": ["Visa Information", "Passport Inquiry"]
+    "description": "Covers all queries related to planning, booking, or executing travel — flights, hotels, trip planning, and travel documentation. The defining trait is physical travel from one place to another. CHOOSE THIS DOMAIN for: searching or booking flights/hotels, planning an itinerary, getting travel recommendations, and obtaining visa/passport information. DO NOT CHOOSE THIS for: home delivery tracking (→ Customer Support > Orders), general financial planning (→ Finance), or coding that happens to involve travel APIs (→ Coding). Key signals: 'flight', 'hotel', 'trip', 'travel', 'itinerary', 'destination', 'visa', 'passport', 'vacation', 'book a room', 'fly to'.",
+    "examples": ["Book me a flight to London", "Best hotels in Paris", "Plan a 7-day Europe trip", "Do I need a visa for Japan?", "Is my flight on time?"],
+    "categories": {
+      "Booking > Flights": {
+        "description": "Queries about searching for, comparing, or getting information about specific flights. The focus is on AIR TRAVEL specifically — not general trip planning. CHOOSE THIS when the user is asking about flights: prices, routes, timings, or status of a specific flight. Key signals: 'flight', 'airline', 'fly', 'airfare', 'flight number', 'departure', 'landing'. DO NOT CHOOSE THIS for: ground/rail transport, hotel booking (→ Booking > Hotels), or general trip planning (→ Planning).",
+        "examples": ["Cheapest flight to New York", "Next direct flight to Tokyo", "Is flight AI202 on time?", "Flights under $300 to Miami", "When does the next flight to London depart?"],
+        "intents": {
+          "Cheapest Flight": {
+            "description": "User wants to find the most affordable flight option to a destination — prioritizing low cost over speed or convenience. SIGNALS: 'cheapest flight', 'cheapest way to fly', 'budget flight', 'lowest airfare', 'most affordable flight', 'cheap tickets', 'lowest price flight', 'economy flight deals', 'budget airline'. DISTINGUISH: Unlike Fastest Flight (prioritizes speed), the user here explicitly cares most about cost. Unlike Flight Status (about an existing flight), this is a search query for a future booking.",
+            "examples": ["What's the cheapest flight to Paris?", "Cheapest tickets to New York this weekend", "Budget flight options to Dubai", "Find me the lowest fare to Bangkok", "Cheapest economy class to London", "Cheapest airline from Mumbai to Delhi"]
+          },
+          "Fastest Flight": {
+            "description": "User wants the quickest or most direct flight to a destination — fewest layovers, shortest total travel time, earliest arrival. SIGNALS: 'fastest flight', 'direct flight', 'non-stop flight', 'quickest route', 'shortest travel time', 'fewest layovers', 'soonest arrival', 'next available flight', 'earliest flight'. DISTINGUISH: Unlike Cheapest Flight (cost is primary), speed/convenience is the user's priority here. Unlike Flight Status (checking an existing flight), this is about finding the best future option.",
+            "examples": ["What's the fastest flight to Tokyo?", "Any direct flights from NYC to LA?", "Non-stop flight to Dubai?", "Quickest way to get to London from Sydney", "Earliest flight tomorrow morning to Chicago", "Fewest stops to get to Singapore"]
+          },
+          "Flight Status": {
+            "description": "User wants to know the real-time or current status of a SPECIFIC, IDENTIFIED flight — whether it is on time, delayed, cancelled, or has landed. The flight already exists and may be today's or an upcoming one. SIGNALS: 'flight status', 'is my flight on time', 'flight delayed', 'flight cancelled', 'flight AA123', 'arrival/departure status', 'gate information', 'has the plane landed', 'flight tracker'. DISTINGUISH: Unlike Cheapest/Fastest Flight (searching for a future flight), this is about a specific known flight that is already booked or about to depart.",
+            "examples": ["Is flight BA142 on time?", "My flight is delayed — what's the update?", "Has flight AA101 landed yet?", "What gate is my flight at?", "Is IndiGo 6E204 cancelled?", "Check status of flight EK500"]
+          }
+        }
+      },
+      "Booking > Hotels": {
+        "description": "Queries about finding, comparing, or booking hotel accommodation or lodging. CHOOSE THIS when the user's need is specifically about WHERE TO STAY — not about flights, trip planning, or documentation. Key signals: 'hotel', 'room', 'accommodation', 'stay', 'book a room', 'check-in', 'resort', 'hostel'. DO NOT CHOOSE THIS for: full trip planning (→ Planning) or flight booking (→ Booking > Flights).",
+        "examples": ["Best budget hotel in Rome", "5-star hotel in Paris", "Is the Marriott available next Friday?", "Cheap hostels in Bangkok", "Book a hotel room in Tokyo for 3 nights"],
+        "intents": {
+          "Budget Hotel": {
+            "description": "User is specifically looking for affordable, low-cost, or value-for-money accommodation. Cost is the primary filter. SIGNALS: 'cheap hotel', 'budget hotel', 'affordable accommodation', 'inexpensive stay', 'hostel', 'under $X per night', 'cheapest hotel', 'budget stay', 'economical option'. DISTINGUISH: Unlike Luxury Hotel (premium is priority), cost minimization is the goal. Unlike Hotel Availability (just checking if a specific hotel has rooms), this is about finding the right type of hotel.",
+            "examples": ["Cheapest hotel in Barcelona", "Budget accommodation in Bali", "Hostels in Amsterdam under $30", "Affordable hotel near the airport", "Cheapest place to stay in Tokyo", "Budget-friendly hotel in New York City"]
+          },
+          "Luxury Hotel": {
+            "description": "User wants high-end, premium, or upscale accommodation — 4 or 5-star hotels, resorts, suites, or boutique experiences. SIGNALS: '5-star hotel', 'luxury hotel', 'premium accommodation', 'resort', 'best hotel in', 'penthouse suite', 'spa hotel', 'five-star', 'finest hotel', 'high-end stay', 'VIP accommodation'. DISTINGUISH: Unlike Budget Hotel (cost minimization), the user here wants quality and prestige. Unlike Hotel Availability (checking rooms), this is about the tier of accommodation.",
+            "examples": ["Best 5-star hotel in Paris", "Luxury resort in Maldives", "Book a suite at the Ritz", "Top-rated hotels in Dubai", "Premium hotel with spa in Singapore", "Finest hotel in London for a honeymoon"]
+          },
+          "Hotel Availability": {
+            "description": "User wants to know if a specific hotel (already identified by name or type) has rooms available on particular dates — not searching for a hotel type, but checking inventory for a known property. SIGNALS: 'is [hotel name] available', 'rooms available for dates', 'available this weekend', 'check availability for', 'any rooms left', 'fully booked?', 'vacancy for', 'can I get a room at X on Y date'. DISTINGUISH: Unlike Budget/Luxury Hotel (type of hotel is unknown), the user here already has a hotel in mind and just needs availability confirmation.",
+            "examples": ["Is the Hilton available next weekend?", "Check room availability at Marriott Bonvoy for Dec 15", "Any vacancies at the Grand Hyatt on Friday?", "Is this hotel fully booked for New Year's?", "Available rooms at Four Seasons Bangkok in January?", "Do you have rooms for 2 adults on March 5th?"]
+          }
+        }
+      },
+      "Planning": {
+        "description": "Queries about PLANNING a trip at a higher level — not booking a specific flight or hotel, but designing the overall journey: what to do, where to go, how to structure time, and how much it will cost. CHOOSE THIS when the user is in planning/inspiration mode rather than transaction mode. Key signals: 'plan my trip', 'itinerary', 'what to do in', 'recommend a destination', 'travel tips', 'trip budget'. DO NOT CHOOSE THIS when the user specifically wants to book flights (→ Booking > Flights) or hotels (→ Booking > Hotels).",
+        "examples": ["Plan a 10-day Japan trip for me", "What should I do in Rome?", "Best destinations for a beach vacation", "How much does a trip to Europe cost?", "Recommend places to visit in Southeast Asia"],
+        "intents": {
+          "Itinerary Planning": {
+            "description": "User wants a structured, organized plan for a trip — a day-by-day schedule of activities, transport, meals, and sightseeing. SIGNALS: 'plan my trip to X', 'day-by-day itinerary', 'travel plan', 'what should I do in X for Y days', 'schedule for my trip', '3-day plan for Paris', 'organize my vacation', 'trip schedule'. DISTINGUISH: Unlike Travel Recommendations (just ideas/suggestions), this is about ORGANIZING those ideas into a structured, time-bound plan. Unlike Budget Planning (cost focus), this is about activities and time allocation.",
+            "examples": ["Plan a 7-day itinerary for Japan", "Day-by-day schedule for Paris trip", "I have 5 days in Bali, what should I do each day?", "Create a travel plan for my Europe vacation", "Plan my 10-day Southeast Asia trip", "Itinerary for 3 days in Rome"]
+          },
+          "Travel Recommendations": {
+            "description": "User wants suggestions, ideas, or advice about destinations, attractions, restaurants, activities, or experiences — without needing a structured itinerary. SIGNALS: 'what to do in X', 'best places to visit', 'recommend a destination', 'hidden gems', 'tourist spots', 'must-see in', 'local food to try', 'best beaches/mountains/cities', 'travel tips for X', 'where should I go'. DISTINGUISH: Unlike Itinerary Planning (structured schedule), this is open-ended suggestion and inspiration. Unlike Budget Planning (cost focus), the user wants ideas, not numbers.",
+            "examples": ["What are the must-see places in Tokyo?", "Best things to do in Bangkok", "Hidden gems in Barcelona", "Where should I travel in December?", "Best beach destinations in Asia", "Local food to try in Mexico City"]
+          },
+          "Budget Planning": {
+            "description": "User wants to understand, estimate, or manage the total financial cost of a planned trip. SIGNALS: 'how much does a trip to X cost', 'travel budget', 'cost of visiting', 'budget for vacation', 'how much should I save', 'daily budget', 'total trip cost', 'is X expensive to travel to', 'accommodation + flights cost', 'money needed for trip'. DISTINGUISH: Unlike Itinerary Planning (activities/schedule focus), this is specifically about finances. Unlike Travel Recommendations (inspiration), this is about cost forecasting.",
+            "examples": ["How much does a trip to Japan cost?", "What's the average daily budget in Thailand?", "How much should I save for a Europe vacation?", "Is Bali expensive for tourists?", "Total cost of a 2-week trip to New Zealand", "Budget for a solo trip to South America"]
+          }
+        }
+      },
+      "Documentation": {
+        "description": "Queries about OFFICIAL DOCUMENTS required for international travel — visas, passports, and entry requirements. CHOOSE THIS when the user needs information about legal/administrative travel requirements. Key signals: 'visa', 'passport', 'entry requirements', 'travel documents', 'immigration'. DO NOT CHOOSE THIS for: flight or hotel booking (→ respective categories), general trip planning (→ Planning).",
+        "examples": ["Do I need a visa for Japan?", "How do I renew my passport?", "Visa on arrival countries for Indian passport?", "How long does a US visa take?", "My passport is expiring soon"],
+        "intents": {
+          "Visa Information": {
+            "description": "User needs information about visa requirements, eligibility, application process, fees, processing time, or types of visas for visiting a specific country. SIGNALS: 'do I need a visa for X', 'visa requirements', 'how to apply for visa', 'visa on arrival', 'tourist visa', 'e-visa', 'visa fee', 'visa processing time', 'work/student visa', 'visa denied'. DISTINGUISH: Unlike Passport Inquiry (about the passport document itself), this is about the visa — a separate permission to enter a specific country.",
+            "examples": ["Do I need a visa to visit France?", "How to apply for a US tourist visa?", "Visa on arrival for Dubai?", "How long does a Schengen visa take?", "e-visa for Turkey process", "What documents do I need for a Japan visa?"]
+          },
+          "Passport Inquiry": {
+            "description": "User has questions about their passport — applying for a new one, renewing an expiring one, processing time, required documents, emergency passport, or passport validity requirements. SIGNALS: 'apply for passport', 'passport renewal', 'passport expired', 'how long does passport take', 'passport validity', 'child passport', 'lost passport', 'emergency passport', 'passport photos', 'passport office'. DISTINGUISH: Unlike Visa Information (permission to enter a country), this is about the passport document itself — the foundational travel ID document.",
+            "examples": ["How do I renew my passport?", "How long does it take to get a new passport?", "I lost my passport abroad, what do I do?", "Can I travel with a passport expiring in 3 months?", "How to apply for a child's passport?", "Emergency passport application process"]
+          }
+        }
+      }
+    }
   },
   "Coding": {
-    "Debugging": ["Debug Python", "Debug JavaScript", "Runtime Error"],
-    "Code Generation": ["Generate Function", "Write Script", "API Integration"],
-    "System Design": ["Low Level Design", "High Level Design"]
+    "description": "Technical queries from developers or learners specifically about writing, fixing, or architecting software. The defining trait is that the user has code or a software system they are working on. CHOOSE THIS DOMAIN for: debugging errors in code, generating new code, and designing software architectures. DO NOT CHOOSE THIS for: general technology questions without code (→ Education > Learning), app USAGE questions (→ Customer Support), or data science/statistics without code. Key signals: specific error messages, stack traces, 'write a function/script', 'API', 'class', 'database schema', 'microservices', language keywords (Python, JavaScript, SQL, etc), 'debug', 'architecture'.",
+    "examples": ["I'm getting a KeyError in my Python code", "Write a function to sort a list", "Design the architecture for a chat app", "My JavaScript promise isn't resolving", "Help me integrate the Stripe API"],
+    "categories": {
+      "Debugging": {
+        "description": "The user has EXISTING code that is broken, producing errors, or behaving unexpectedly — and they want help identifying the root cause and fixing it. The code already exists; the problem is finding and fixing what's wrong. CHOOSE THIS for: error messages, exceptions, stack traces, unexpected outputs, code not working as expected. Key signals: error message text, 'error', 'exception', 'bug', 'not working', 'crash', 'undefined', 'null pointer', 'TypeError', 'SyntaxError'. DO NOT CHOOSE THIS for: writing new code from scratch (→ Code Generation), architecture decisions (→ System Design).",
+        "examples": ["Getting a TypeError in my Python script", "Why is my JavaScript function returning undefined?", "My Java app keeps crashing at runtime", "SyntaxError I can't figure out", "My React component isn't re-rendering"],
+        "intents": {
+          "Debug Python": {
+            "description": "User has a bug, error, or unexpected behavior specifically in Python code. SIGNALS: Python-specific errors (TypeError, ValueError, KeyError, AttributeError, IndentationError, ImportError), Python keywords/syntax (def, class, import, pip, conda, Django, Flask, pandas, NumPy), '.py files', 'Python script', 'Python function'. DISTINGUISH: Unlike Debug JavaScript (a different language), this requires Python-specific knowledge. Unlike Runtime Error (language-agnostic crash), the user specifically names Python or the error is clearly Python-syntax based.",
+            "examples": ["Getting a KeyError in Python", "My Django app is throwing a 500 error", "Python AttributeError: NoneType has no attribute", "Pandas dataframe not filtering correctly", "ModuleNotFoundError in my Python script", "Indentation error in my Python code"]
+          },
+          "Debug JavaScript": {
+            "description": "User has a bug, error, or unexpected behavior specifically in JavaScript, TypeScript, or a JS framework (React, Vue, Angular, Node.js). SIGNALS: JS-specific errors (ReferenceError, undefined is not a function, Cannot read property of undefined), JS keywords/syntax (const, let, async/await, Promise, .then, require, import/export), framework mentions (React, Next.js, Vue, Angular, Express, Node), '.js/.ts files', 'npm/yarn error'. DISTINGUISH: Unlike Debug Python (different language), this is JavaScript-specific. Unlike Runtime Error (generic), the code is clearly JavaScript/TypeScript.",
+            "examples": ["TypeError: Cannot read properties of undefined in React", "My async/await isn't resolving correctly", "Promise rejection I can't catch", "Why is my useState not updating?", "Node.js ECONNREFUSED error", "Vue component not reactive"]
+          },
+          "Runtime Error": {
+            "description": "User is experiencing an error that occurs during program execution — not a syntax or compile-time error — and it is either language-agnostic or from a language other than Python/JavaScript (e.g., Java, C++, Go, Rust, C#). SIGNALS: 'crash at runtime', 'segmentation fault', 'null pointer exception', 'out of memory', 'stack overflow', 'segfault', Java/C/Go/Rust error messages, 'program crashes when', 'works until X point then fails'. DISTINGUISH: Use this for non-Python/non-JS languages or when the language is not specified. If it's clearly Python → Debug Python. If clearly JavaScript → Debug JavaScript.",
+            "examples": ["Java NullPointerException at runtime", "Segmentation fault in my C++ program", "Go panic: runtime error: index out of range", "Program crashes after handling 1000 requests", "Out of memory error in production", "Stack overflow in my recursive C# function"]
+          }
+        }
+      },
+      "Code Generation": {
+        "description": "The user wants NEW code written — they are starting from scratch or adding something new, not fixing existing code. CHOOSE THIS when the primary ask is 'write me...', 'create a...', 'generate a...'. Key signals: 'write a', 'create a', 'generate', 'build a', 'make a function/script/class'. DO NOT CHOOSE THIS for: fixing existing code (→ Debugging), architectural planning before writing code (→ System Design).",
+        "examples": ["Write a function to validate email addresses", "Create a Python script to scrape a website", "Help me integrate the Stripe API", "Write a bash script to back up files", "Generate a REST API in Node.js"],
+        "intents": {
+          "Generate Function": {
+            "description": "User wants a single, specific, reusable function or method written — a self-contained unit of code that does one thing. SIGNALS: 'write a function to', 'create a method that', 'function that does X', 'helper function', 'utility function', 'function for sorting/filtering/calculating/validating/parsing'. DISTINGUISH: Unlike Write Script (a complete runnable program), this is a modular component. Unlike API Integration (connecting to external services), this is pure logic.",
+            "examples": ["Write a function to validate email addresses", "Create a Python function to parse JSON", "Function to calculate compound interest", "Write a recursive function to flatten a list", "Helper function to format dates", "Create a method to check for palindromes"]
+          },
+          "Write Script": {
+            "description": "User wants a complete, standalone, runnable script or program — not just a function, but a full piece of code that can be executed end-to-end for a task. SIGNALS: 'write a script to', 'automation script', 'Python script that', 'bash script', 'shell script', 'script to scrape/automate/process/convert', 'write a program that', 'scheduled task', 'cron job script'. DISTINGUISH: Unlike Generate Function (one modular unit), this is a complete runnable program. Unlike API Integration (specifically about connecting to an external API), this is a broader task.",
+            "examples": ["Write a Python script to scrape product prices", "Bash script to automate file backups", "Script to rename 1000 files in bulk", "Python automation script for data pipeline", "Write a shell script to monitor disk usage", "Script to send daily email reports"]
+          },
+          "API Integration": {
+            "description": "User needs code to connect to, authenticate with, send requests to, or parse responses from an external API or third-party service. SIGNALS: 'integrate with X API', 'call the REST API', 'API key authentication', 'make an API request', 'parse the API response', 'OAuth', 'webhook', 'Stripe/Twilio/OpenAI/Google API', 'HTTP GET/POST request', 'API endpoint', 'SDK setup'. DISTINGUISH: Unlike Generate Function (generic logic), this is specifically about inter-system communication with an external service. Unlike Write Script (general program), the defining feature is external API interaction.",
+            "examples": ["Integrate the Stripe payment API", "Call the OpenAI API from Python", "Set up OAuth with Google", "How to use the Twilio SMS API?", "Connect to the Twitter API and fetch tweets", "Handle webhook from Stripe in Node.js"]
+          }
+        }
+      },
+      "System Design": {
+        "description": "User wants help thinking through and designing the ARCHITECTURE or STRUCTURE of a software system — not writing code yet, but planning how components will be organized, interact, and scale. CHOOSE THIS for: class diagrams, service boundaries, database schemas, scalability planning, architectural tradeoffs. Key signals: 'design a system', 'architecture for', 'how should I structure', 'scalability', 'microservices vs monolith', 'database design', 'class diagram'. DO NOT CHOOSE THIS for: writing the actual code (→ Code Generation) or debugging existing code (→ Debugging).",
+        "examples": ["Design a URL shortener system", "How should I structure a parking lot in OOP?", "Microservices vs monolith for my startup?", "Design the database schema for a social media app", "How to build a scalable notification system?"],
+        "intents": {
+          "Low Level Design": {
+            "description": "User needs to design the DETAILED, component-level structure of a specific feature or module — class hierarchies, method signatures, data structures, database schemas, design patterns, or object relationships. This is about HOW to implement a feature at the code-structure level. SIGNALS: 'class diagram', 'object-oriented design', 'design the classes for', 'database schema', 'entity-relationship', 'design patterns', 'which data structure should I use', 'model the relationships', 'SOLID principles', 'low-level design'. DISTINGUISH: Unlike High Level Design (big picture architecture), LLD is about the internal structure of specific components.",
+            "examples": ["Design the classes for a parking lot system", "What's the database schema for an e-commerce app?", "OOP design for a library management system", "Which design pattern should I use here?", "Entity-relationship diagram for a blog", "Design the data model for a ride-sharing app"]
+          },
+          "High Level Design": {
+            "description": "User needs to design the OVERALL architecture of an application or system — how major services communicate, which technologies to choose, how to handle scale, load balancers, caches, queues, and the 30,000-foot view of the system. SIGNALS: 'system architecture', 'high-level design', 'microservices vs monolith', 'how to scale X', 'distributed system', 'load balancer', 'message queue', 'tech stack choice', 'design Instagram/Twitter/Uber', 'backend architecture', 'infrastructure design', 'HLD'. DISTINGUISH: Unlike Low Level Design (internal component structure), HLD is about the big-picture view of how the whole system fits together.",
+            "examples": ["Design the architecture for a food delivery app", "How to scale a social media platform to millions of users?", "Microservices vs monolith for a fintech startup", "Design a real-time chat system", "Architecture for a video streaming service like Netflix", "How to design a distributed cache?"]
+          }
+        }
+      }
+    }
   },
   "Healthcare": {
-    "Symptoms": ["Mild Symptoms", "Severe Symptoms", "Chronic Condition"],
-    "Medication": ["Drug Information", "Dosage Query"],
-    "Lifestyle": ["Diet Advice", "Fitness Advice"]
+    "description": "Queries related to physical or mental health — symptoms the user is experiencing, medications they take or want to know about, and lifestyle choices affecting their health. CHOOSE THIS DOMAIN for: health symptoms, medical conditions, drug information, dosage guidance, diet advice, and fitness guidance. DO NOT CHOOSE THIS for: health insurance or billing (→ Finance), medical coding questions (→ Coding), general biology/science learning (→ Education). Key signals: 'symptoms', 'pain', 'diagnosed', 'medication', 'doctor', 'exercise', 'diet', 'condition', body parts or medical terms.",
+    "examples": ["I have a severe chest pain", "What are the side effects of ibuprofen?", "How much metformin should I take?", "Diet plan for weight loss", "I've had diabetes for 5 years"],
+    "categories": {
+      "Symptoms": {
+        "description": "The user is describing, experiencing, or asking about physical or psychological symptoms — bodily sensations, health conditions, or signs of illness they are currently noticing. CHOOSE THIS when the user is presenting health complaints they are personally experiencing. Key signals: 'I have', 'I'm feeling', 'I'm experiencing', 'pain in', 'symptoms of', body part mentions with discomfort. DO NOT CHOOSE THIS for: questions about medications (→ Medication) or lifestyle changes (→ Lifestyle).",
+        "examples": ["I have a bad headache", "My chest hurts and I can't breathe well", "I've been feeling dizzy for 3 days", "I have diabetes and my sugar is high", "I have a slight fever and runny nose"],
+        "intents": {
+          "Mild Symptoms": {
+            "description": "User is experiencing minor, common, non-emergency symptoms that are uncomfortable but not alarming — such as a mild headache, slight fever, runny nose, minor sore throat, mild nausea, or fatigue. SIGNALS: 'slight headache', 'mild fever', 'common cold', 'runny nose', 'sore throat', 'I feel a bit tired', 'minor stomach ache', 'sneezing'. DISTINGUISH: Unlike Severe Symptoms (urgent/alarming), these are everyday ailments. Unlike Chronic Condition (ongoing for months), these are acute and temporary.",
+            "examples": ["I have a mild headache", "I've had a runny nose since yesterday", "Slight fever and sore throat", "Minor stomach upset", "I feel a bit fatigued lately", "Mild cough and cold"]
+          },
+          "Severe Symptoms": {
+            "description": "User is experiencing serious, alarming, or potentially life-threatening symptoms that require urgent medical attention or evaluation. SIGNALS: 'chest pain', 'difficulty breathing', 'can't breathe', 'severe pain', 'crushing pressure in chest', 'sudden numbness', 'vision loss', 'severe headache suddenly', 'high fever (104°F+)', 'vomiting blood', 'loss of consciousness', 'heart pounding', 'stroke symptoms'. DISTINGUISH: Unlike Mild Symptoms (minor and manageable), these are urgent. Unlike Chronic Condition (long-standing), these are acute and serious. Always treat explicit severity language ('severe', 'extreme', 'can't breathe') as this intent.",
+            "examples": ["I have severe chest pain and shortness of breath", "Sudden vision loss in one eye", "I'm vomiting blood", "My heart is racing uncontrollably", "Extreme abdominal pain that came suddenly", "I think I'm having a stroke"]
+          },
+          "Chronic Condition": {
+            "description": "User is dealing with or asking about a health condition that is long-term, recurring, or has been diagnosed — not a new acute symptom. SIGNALS: 'I have diabetes', 'I was diagnosed with', 'managing my', 'chronic pain', 'I've had X for years', 'arthritis', 'asthma', 'hypertension', 'autoimmune', 'thyroid condition', 'living with', 'long-term condition'. DISTINGUISH: Unlike Mild/Severe Symptoms (new acute symptoms), this is about established, ongoing medical conditions. The user typically references a diagnosis or long duration.",
+            "examples": ["I've been diabetic for 10 years", "Managing my blood pressure", "My arthritis is flaring up again", "Living with hypothyroidism", "Chronic back pain treatment options", "I was diagnosed with asthma 2 years ago"]
+          }
+        }
+      },
+      "Medication": {
+        "description": "Queries specifically about pharmaceutical drugs — what they do, how to take them, side effects, interactions, or correct dosages. CHOOSE THIS when the user's question is ABOUT A DRUG, not about symptoms or lifestyle. Key signals: drug names (ibuprofen, metformin, etc.), 'medication', 'drug', 'pill', 'prescription', 'dosage', 'side effects'. DO NOT CHOOSE THIS for: symptom inquiries (→ Symptoms) or non-drug health advice (→ Lifestyle).",
+        "examples": ["What are the side effects of aspirin?", "How much ibuprofen should I take?", "Can I take paracetamol and ibuprofen together?", "What is metformin used for?", "Dosage of amoxicillin for adults"],
+        "intents": {
+          "Drug Information": {
+            "description": "User wants to understand what a medication does — its mechanism, purpose, side effects, contraindications, or interactions with other drugs or food. SIGNALS: 'what does X do', 'side effects of X', 'is X safe to take with Y', 'contraindications', 'drug interactions', 'what is X prescribed for', 'is X safe during pregnancy', 'can I take X if I have Y', 'drug information for'. DISTINGUISH: Unlike Dosage Query (how much/when to take), this is about the nature and safety of the drug itself.",
+            "examples": ["What are the side effects of ibuprofen?", "Can I take metformin if I have kidney issues?", "What is Lipitor prescribed for?", "Drug interaction between aspirin and warfarin", "Is paracetamol safe during pregnancy?", "What does amoxicillin treat?"]
+          },
+          "Dosage Query": {
+            "description": "User wants to know the correct amount, frequency, timing, or duration for taking a specific medication. SIGNALS: 'how much X should I take', 'dosage for X', 'how often should I take', 'X mg dose', 'dose for children/adults', 'maximum daily dose', 'take with food or not', 'how long to take X', 'missed a dose', 'dosing schedule'. DISTINGUISH: Unlike Drug Information (what the drug is/does), this is specifically about how much and when to take it.",
+            "examples": ["How many mg of ibuprofen for a headache?", "How often should I take amoxicillin?", "Maximum daily dose of paracetamol", "Should I take metformin with food?", "Dosage of vitamin D for adults", "I missed my dose, what should I do?"]
+          }
+        }
+      },
+      "Lifestyle": {
+        "description": "Queries about non-pharmaceutical, behavioral health choices — diet, nutrition, exercise, sleep, and daily habits that affect overall health and fitness. CHOOSE THIS when the user is asking about what to eat or how to exercise for health goals — not about treating a specific illness. Key signals: 'diet', 'exercise', 'workout', 'lose weight', 'eat healthy', 'fitness routine', 'calories'. DO NOT CHOOSE THIS for: symptom assessment (→ Symptoms) or drug/medication questions (→ Medication).",
+        "examples": ["Diet plan for weight loss", "Best exercises to lose belly fat", "How many calories should I eat?", "Workout routine for beginners", "Foods to avoid for high blood pressure"],
+        "intents": {
+          "Diet Advice": {
+            "description": "User wants guidance on what to eat, how to structure their diet, which foods to choose or avoid, calorie targets, macronutrient balance, or meal planning — for health, weight management, or a medical condition. SIGNALS: 'what should I eat', 'diet plan', 'meal plan', 'healthy eating', 'lose weight through diet', 'foods to avoid', 'calorie deficit', 'keto/paleo/vegan diet', 'nutrition advice', 'what to eat for X condition'. DISTINGUISH: Unlike Fitness Advice (exercise-focused), this is specifically about food and nutrition. Both may coexist, but classify by the primary request.",
+            "examples": ["What should I eat to lose weight?", "Keto diet plan for beginners", "Foods to avoid for diabetes", "How many calories for a 1500-calorie diet?", "Meal plan for building muscle", "Best foods for heart health"]
+          },
+          "Fitness Advice": {
+            "description": "User wants guidance on physical activity — exercise routines, workout plans, training schedules, gym programs, or sport-specific advice for achieving fitness or health goals. SIGNALS: 'workout plan', 'exercise routine', 'how to lose weight through exercise', 'gym routine', 'cardio vs weights', 'training program', 'how to build muscle', 'running plan', 'yoga for beginners', 'home workout', 'fitness goals'. DISTINGUISH: Unlike Diet Advice (food/nutrition focus), this is specifically about physical exercise. If both are asked together, classify based on which is the primary focus.",
+            "examples": ["Best workout for weight loss", "Home workout routine for beginners", "How to build muscle at the gym?", "5K training plan for first-time runners", "Yoga routine for flexibility", "How many days per week should I exercise?"]
+          }
+        }
+      }
+    }
   },
   "Finance": {
-    "Banking": ["Check Balance", "Block Card", "Transaction History"],
-    "Investments": ["Stock Query", "Portfolio Review"],
-    "Taxes": ["Tax Filing", "Tax Deductions"]
+    "description": "Queries related to personal financial management — banking operations, investment decisions, and tax matters. The defining trait is MONEY MANAGEMENT at a personal or professional finance level. CHOOSE THIS DOMAIN for: checking bank balances, managing cards, reviewing investments, filing taxes. DO NOT CHOOSE THIS for: payment problems with a specific e-commerce platform (→ Customer Support > Payments), cryptocurrency without investment framing (→ General), or coding for finance apps (→ Coding). Key signals: 'bank', 'account balance', 'stock', 'portfolio', 'tax', 'investment', 'transaction', 'block card', 'mutual fund', 'tax return'.",
+    "examples": ["What's my account balance?", "Block my stolen credit card", "How is Tesla stock doing?", "How do I file my taxes?", "What can I write off as a freelancer?"],
+    "categories": {
+      "Banking": {
+        "description": "Queries about the user's relationship with their bank — account balances, debit/credit card management, and records of transactions. CHOOSE THIS for day-to-day banking operations. Key signals: 'bank account', 'balance', 'card', 'block/freeze card', 'transactions', 'statement'. DO NOT CHOOSE THIS for: platform-specific payment failures (→ Customer Support > Payments), investing money (→ Investments), or tax questions (→ Taxes).",
+        "examples": ["Check my account balance", "Block my credit card", "Show me my last 10 transactions", "I lost my debit card, freeze it", "Account statement for last month"],
+        "intents": {
+          "Check Balance": {
+            "description": "User wants to know how much money is currently in their bank account, savings account, or card. SIGNALS: 'check my balance', 'how much is in my account', 'account balance', 'savings balance', 'current balance', 'available funds', 'how much do I have'. DISTINGUISH: Unlike Transaction History (past activity), this is about the CURRENT state of the account. Unlike Block Card (card management), this is pure information.",
+            "examples": ["What's my current account balance?", "How much money do I have in my savings?", "Check my credit card balance", "Available balance in my account", "How much is left on my account?", "What's the balance on my debit card?"]
+          },
+          "Block Card": {
+            "description": "User wants to freeze, block, disable, or report their debit or credit card — typically due to suspected fraud, theft, or loss. SIGNALS: 'block my card', 'freeze my card', 'lost my card', 'stolen card', 'suspicious transaction — block card', 'disable my card', 'report card stolen', 'emergency block', 'card compromised', 'cancel debit card'. DISTINGUISH: Unlike Check Balance (information only), this is an ACTION with immediate security consequences. Unlike Transaction History (reviewing past activity), this is about stopping future unauthorized use.",
+            "examples": ["Block my credit card immediately", "I lost my debit card, freeze it", "My card was stolen, disable it", "Suspicious transaction on my card — block it", "Cancel my debit card", "Freeze my card until I find it"]
+          },
+          "Transaction History": {
+            "description": "User wants to view, retrieve, understand, or dispute specific past transactions in their account. SIGNALS: 'transaction history', 'account statement', 'recent transactions', 'list of charges', 'what did I spend', 'download statement', 'past payments', 'I don't recognize a transaction', 'last 30 days activity'. DISTINGUISH: Unlike Check Balance (current state), this is about PAST activity. Unlike Block Card (action to prevent fraud), this is about reviewing records.",
+            "examples": ["Show me my last 10 transactions", "Download my bank statement for March", "I don't recognize a transaction from yesterday", "List all transactions from last month", "What did I spend money on this week?", "Statement for my savings account"]
+          }
+        }
+      },
+      "Investments": {
+        "description": "Queries about growing wealth through financial markets — stocks, mutual funds, bonds, ETFs, and portfolio management. CHOOSE THIS when the user is thinking about investing or managing their investment portfolio. Key signals: 'stock', 'shares', 'portfolio', 'mutual fund', 'ETF', 'market', 'invest', 'returns', 'dividend'. DO NOT CHOOSE THIS for: everyday banking (→ Banking), tax questions about investments (→ Taxes), or crypto without investment framing.",
+        "examples": ["How is Apple stock performing?", "Review my investment portfolio", "Should I invest in index funds?", "What's the Tesla stock price?", "Is my portfolio well diversified?"],
+        "intents": {
+          "Stock Query": {
+            "description": "User wants current or historical information about a specific stock, company shares, ETF, or financial instrument — price, performance, news, or outlook. SIGNALS: 'stock price of X', 'share price', 'Tesla/Apple/NVIDIA stock', 'is X stock a good buy', 'stock performance', 'market cap', 'dividend yield', 'stock up/down today', 'P/E ratio', 'market trend'. DISTINGUISH: Unlike Portfolio Review (about the user's OWN holdings), this is about a specific external stock or market instrument.",
+            "examples": ["What's the Apple stock price today?", "How is Tesla stock performing?", "NVIDIA stock analysis", "Is Amazon a good stock to buy now?", "S&P 500 performance this year", "Dividend yield of Microsoft stock"]
+          },
+          "Portfolio Review": {
+            "description": "User wants an overview, analysis, or assessment of their PERSONAL investment portfolio — total value, allocation, performance, diversification, or rebalancing advice. SIGNALS: 'my portfolio', 'portfolio performance', 'review my investments', 'how is my portfolio doing', 'asset allocation', 'should I rebalance', 'portfolio diversification', 'my holdings', 'investment summary', 'net worth from investments'. DISTINGUISH: Unlike Stock Query (about an external stock), this is specifically about the user's OWN collection of investments.",
+            "examples": ["How is my investment portfolio doing?", "Review my stock holdings", "Is my portfolio well diversified?", "Should I rebalance my portfolio?", "What's my total investment return?", "My asset allocation breakdown"]
+          }
+        }
+      },
+      "Taxes": {
+        "description": "Queries related to tax obligations, tax filing procedures, or tax reduction strategies. CHOOSE THIS when the user's question is specifically about taxes — whether income, capital gains, sales, or business taxes. Key signals: 'tax', 'IRS', 'tax return', 'file taxes', 'tax deduction', 'refund from taxes'. DO NOT CHOOSE THIS for: billing disputes on a platform (→ Customer Support > Payments) or invoice requests (→ Customer Support > Payments > Invoice Request).",
+        "examples": ["How do I file my taxes this year?", "What can I deduct as a freelancer?", "Tax filing deadline for self-employed", "Can I deduct my home office?", "First time filing taxes guide"],
+        "intents": {
+          "Tax Filing": {
+            "description": "User needs help with the process or mechanics of submitting a tax return — deadlines, how to file, which forms to use, what documents to gather, e-filing options, or understanding the overall filing process. SIGNALS: 'how to file taxes', 'tax filing deadline', 'file my return', 'ITR filing', 'tax forms', 'do I need to file', 'tax software', 'e-file', 'first time filing taxes', 'self-employed taxes'. DISTINGUISH: Unlike Tax Deductions (what to claim), this is about the ACT of filing — the process and mechanics.",
+            "examples": ["How do I file my tax return?", "What's the deadline for tax filing?", "First time filing taxes as a freelancer", "Best tax software to use", "Do I need to file taxes if I earn under $X?", "How to e-file my income tax return?"]
+          },
+          "Tax Deductions": {
+            "description": "User wants to understand what expenses, credits, or deductions they are eligible to claim to reduce their tax liability — allowable deductions, exemptions, credits, or write-offs. SIGNALS: 'tax deductions', 'can I deduct X', 'what can I write off', 'tax exemptions', 'tax credits', 'business expense deduction', 'home office deduction', 'how to reduce my taxes', 'capital gains exemption', 'freelancer deductions'. DISTINGUISH: Unlike Tax Filing (the process of submitting), this is about WHAT to claim to reduce the tax bill.",
+            "examples": ["What can I write off as a freelancer?", "Can I deduct home office expenses?", "Tax deductions for work-from-home employees", "Deductions available for first-time homebuyers", "Can I deduct my car for business?", "What tax credits am I eligible for?"]
+          }
+        }
+      }
+    }
   },
   "Education": {
-    "Learning": ["Concept Explanation", "Tutorial Request"],
-    "Exams": ["Exam Preparation", "Practice Questions"],
-    "Assignments": ["Homework Help", "Project Help"]
+    "description": "Queries focused on LEARNING and ACADEMIC activities — understanding concepts, preparing for exams, and completing academic work. The defining trait is intellectual learning rather than professional task execution. CHOOSE THIS DOMAIN for: explaining concepts, requesting tutorials, exam prep, practice questions, homework help, and project assistance. DO NOT CHOOSE THIS for: actually writing production code (→ Coding), medical advice (→ Healthcare), or researching a product to buy (→ Customer Support). Key signals: 'explain', 'how does X work', 'help me understand', 'exam', 'homework', 'assignment', 'study', 'tutorial', 'learning'.",
+    "examples": ["Explain recursion to me", "Help me prepare for the GRE", "I need help with my math homework", "Give me practice questions for physics", "How does photosynthesis work?"],
+    "categories": {
+      "Learning": {
+        "description": "Requests where the user wants to UNDERSTAND something — gain knowledge about a concept, theory, or process through explanation or a tutorial. The output is understanding, not a deliverable. CHOOSE THIS when the user is in learning mode. Key signals: 'explain', 'what is', 'how does X work', 'I don't understand', 'teach me', 'tutorial'. DO NOT CHOOSE THIS when the user wants to pass an exam (→ Exams) or complete a specific assignment (→ Assignments).",
+        "examples": ["Explain how the internet works", "What is machine learning?", "How do I use Python decorators?", "Walk me through how to use Git", "I don't understand how neural networks work"],
+        "intents": {
+          "Concept Explanation": {
+            "description": "User wants a clear explanation of a specific concept, term, theory, or phenomenon — to build understanding. No step-by-step guide needed; they want the 'what' and 'why'. SIGNALS: 'what is X', 'explain X', 'how does X work', 'what does X mean', 'concept of X', 'define X', 'I don't understand X', 'what is the difference between X and Y', 'ELI5 X'. DISTINGUISH: Unlike Tutorial Request (step-by-step HOW-TO), this is about understanding the concept itself — the idea, not the procedure.",
+            "examples": ["What is recursion?", "Explain how TCP/IP works", "What's the difference between AI and ML?", "How does compound interest work?", "Explain the concept of supply and demand", "What is quantum computing?"]
+          },
+          "Tutorial Request": {
+            "description": "User wants step-by-step instructions or a hands-on guide to DO or LEARN something — a walkthrough they can follow to accomplish a task. SIGNALS: 'how to do X', 'tutorial for X', 'step-by-step guide', 'walk me through', 'how to set up X', 'beginner guide to X', 'show me how to', 'guide to getting started with X'. DISTINGUISH: Unlike Concept Explanation (understanding an idea), this is about following a procedure to achieve a result. The output is action-oriented.",
+            "examples": ["How to set up a React project from scratch", "Step-by-step guide to investing in stocks", "Tutorial for learning Python as a beginner", "Walk me through how to create a pivot table in Excel", "How to start a blog — step by step", "Beginner guide to meditation"]
+          }
+        }
+      },
+      "Exams": {
+        "description": "Queries specifically about EXAM-RELATED activities — preparing for a test, strategies for scoring well, or practicing with questions. The context is explicit academic or professional testing. CHOOSE THIS when an exam is mentioned or strongly implied. Key signals: 'exam', 'test', 'GRE/GMAT/SAT/UPSC/board exam', 'study for', 'practice questions', 'mock test'. DO NOT CHOOSE THIS for: general concept learning (→ Learning) or homework/project help (→ Assignments).",
+        "examples": ["How to prepare for the GRE?", "Give me practice questions for calculus", "Study plan for UPSC", "Mock test for Java certification", "Tips for acing the SAT"],
+        "intents": {
+          "Exam Preparation": {
+            "description": "User wants strategies, study plans, timelines, resources, or tips to prepare for an upcoming exam — the 'how to study' for it. SIGNALS: 'how to prepare for X exam', 'study plan for X', 'tips for cracking X', 'strategy for GRE/GMAT/SAT', 'preparation for board exams', 'how to study for finals', 'what to focus on for X exam', 'study schedule'. DISTINGUISH: Unlike Practice Questions (actual test material), this is about the preparation STRATEGY and approach.",
+            "examples": ["How should I prepare for the GRE?", "Study plan for the UPSC exam", "Tips to crack the CAT exam", "How many months to prepare for GMAT?", "How to study for finals in 1 week?", "Best resources to prepare for AWS certification"]
+          },
+          "Practice Questions": {
+            "description": "User wants actual sample questions, mock tests, quizzes, or practice problems to test and reinforce their knowledge before an exam. SIGNALS: 'practice questions for X', 'mock test', 'sample problems', 'quiz me on X', 'past year papers', 'test my knowledge of X', 'practice MCQs', 'give me some problems to solve', 'flashcards for X'. DISTINGUISH: Unlike Exam Preparation (strategy), this is about actual test content — the user wants material to practice with.",
+            "examples": ["Give me 5 calculus practice questions", "Mock test for GRE verbal", "Practice MCQs for biology", "Sample problems for data structures", "Quiz me on the periodic table", "Past year UPSC questions on history"]
+          }
+        }
+      },
+      "Assignments": {
+        "description": "Requests for help COMPLETING specific academic deliverables — homework problems, essays, or project work that has been assigned to the user. The user has a specific task they need to finish. CHOOSE THIS when there is a specific academic task (homework, project) to complete. Key signals: 'homework', 'assignment', 'project', 'essay', 'due tomorrow', 'my teacher asked'. DO NOT CHOOSE THIS for: general learning (→ Learning) or exam preparation (→ Exams).",
+        "examples": ["Help me solve this calculus problem", "I need to write an essay about climate change", "Help me with my physics assignment", "Science fair project ideas", "Help me complete this coding assignment"],
+        "intents": {
+          "Homework Help": {
+            "description": "User needs help solving, understanding, or completing a specific, discrete homework problem or assignment — typically a well-defined question or problem set. SIGNALS: 'help with my homework', 'solve this problem', 'homework question', 'I don't understand this problem', 'math homework', 'physics problem', 'chemistry question', 'answer this question from my assignment'. DISTINGUISH: Unlike Project Help (larger, multi-part deliverable), homework is typically a specific problem or short assignment. Unlike Concept Explanation (learning in general), this is about completing a specific task.",
+            "examples": ["Solve this differential equation for me", "Help me with question 5 from my homework", "I don't understand this chemistry problem", "Answer this history question for my assignment", "Help me balance this chemical equation", "My math homework question on probability"]
+          },
+          "Project Help": {
+            "description": "User needs help with a larger, multi-stage academic project — research, writing an essay or report, building something, or planning and executing a sustained piece of work. SIGNALS: 'my school project', 'term paper', 'research project', 'capstone', 'help with my essay', 'science fair project', 'project on X', 'write a report about', 'design a project', 'semester project'. DISTINGUISH: Unlike Homework Help (specific, small problem), projects are broader and multi-part. Unlike Tutorial Request (learning how to do something), the user has a specific deliverable to produce.",
+            "examples": ["Help me write a research paper on climate change", "Science fair project ideas for 8th grade", "Help me plan my semester project on AI", "I need to build a portfolio for my design class", "Essay on the French Revolution for my history class", "Help me complete my capstone project"]
+          }
+        }
+      }
+    }
   },
   "General": {
-    "Miscellaneous": ["Unknown Query", "Ambiguous Query", "Multi-intent Query"]
+    "description": "A safety-net domain for queries that genuinely do not fit any other domain, are too vague to classify reliably, or contain multiple conflicting intents spanning different domains. CHOOSE THIS DOMAIN ONLY AS A LAST RESORT — only when no other domain fits even at low confidence. Do not default to General for vague queries if a domain can still be inferred. Key signals for General: completely unrelated topics mixed together, no discernible topic, purely social greetings with no content, or queries that would need to be split across 3+ domains to answer.",
+    "examples": ["Hello", "I need help with something", "Cancel my flight and debug my Python code", "What is the meaning of life?", "Can you assist me?"],
+    "categories": {
+      "Miscellaneous": {
+        "description": "The catch-all category within General for queries that are unrecognizable, have no clear domain, or are inherently multi-domain in a way that cannot be resolved. Use sparingly.",
+        "examples": ["Hello, can you help?", "I have a problem but I'm not sure what kind", "Book a hotel and fix my code", "What should I do today?"],
+        "intents": {
+          "Unknown Query": {
+            "description": "The query is completely unrecognizable, nonsensical, or does not map to any topic in the system. The LLM cannot determine ANY domain even at low confidence. SIGNALS: gibberish text, non-sequitur with zero context, queries in unsupported topics with no overlap to any domain. NOTE: Use this very sparingly — only if there is truly no domain match even at 0.3 confidence.",
+            "examples": ["asdfghjkl", "xkcd banana purple", "What is the color of Tuesday?", "Translate this to Klingon"]
+          },
+          "Ambiguous Query": {
+            "description": "The query has some content but is too vague, brief, or context-free to classify with any confidence into a specific intent. More information would be needed from the user. SIGNALS: 'help', 'I have a problem', 'I need assistance', 'can you help me with something', one-word queries with no context. NOTE: Prefer a low-confidence classification in a real domain over defaulting to Ambiguous if ANY domain is plausible.",
+            "examples": ["Help", "I need help with something", "Can you assist me?", "I have a question", "I'm not sure what to do"]
+          },
+          "Multi-intent Query": {
+            "description": "The query EXPLICITLY contains 2 or more fully distinct requests that span completely different domains — not just a complex single-domain query. SIGNALS: 'book a flight AND help me debug my code', 'reset my password AND explain quantum physics', 'cancel my order AND tell me about tax deductions'. NOTE: Only use this when the query truly cannot be resolved to a single primary intent. If one intent is primary and the other is secondary/incidental, classify by the primary intent.",
+            "examples": ["Book a flight to Paris and also help me debug my Python code", "Cancel my order and explain how compound interest works", "Fix my JavaScript bug and plan my Tokyo trip", "Reset my password and file my taxes"]
+          }
+        }
+      }
+    }
   }
 }

@@ -9,6 +9,7 @@ from backend.models.schemas import (
 )
 from backend.services.cache import cache
 from backend.services.cost_tracker import compute_cost
+from backend.services import intent_tree_store
 from backend.services.llm_provider import LLMCallError, call_llm_parsed
 from backend.utils.confidence import normalize
 from backend.utils.prompt_builder import flat_system_prompt, flat_user_prompt
@@ -32,7 +33,7 @@ async def classify_flat(
 
     start = time.monotonic()
     system = flat_system_prompt()
-    user = flat_user_prompt(query, tree)
+    user = flat_user_prompt(query, intent_tree_store.get_full_tree())
 
     fallback_triggered = False
     fallback_reason = None
