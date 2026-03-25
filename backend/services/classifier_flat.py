@@ -79,6 +79,7 @@ async def classify_flat(
         latency_ms=latency_ms,
         fallback_triggered=fallback_triggered,
         fallback_reason=fallback_reason,
+        raw_output=resp.content,
     )
 
     if use_cache:

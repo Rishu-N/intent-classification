@@ -13,6 +13,7 @@ class VoteSchema(BaseModel):
     choice: str
     confidence: float
     reasoning: str
+    raw_output: str = ""
 
 
 class ClassifyStepSchema(BaseModel):
@@ -43,6 +44,7 @@ class FlatResultSchema(BaseModel):
     cache_hit: bool = False
     fallback_triggered: bool = False
     fallback_reason: Optional[str] = None
+    raw_output: str = ""
 
 
 class HierarchicalResultSchema(BaseModel):

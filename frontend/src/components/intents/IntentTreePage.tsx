@@ -81,16 +81,6 @@ const DOMAIN_COLORS = [
   },
 ];
 
-interface TooltipProps {
-  domain: string;
-  category: string;
-  intent: string;
-}
-
-function intentDescription({ domain, category, intent }: TooltipProps): string {
-  return `${domain}  ›  ${category}  ›  ${intent}`;
-}
-
 export function IntentTreePage() {
   const { intentTree, fetchIntentTree } = useClassifyStore();
   const [search, setSearch] = useState('');
@@ -101,11 +91,11 @@ export function IntentTreePage() {
   }, [intentTree, fetchIntentTree]);
 
   const tree = intentTree?.tree ?? {};
+  const descriptions = intentTree?.descriptions ?? {};
   const domains = Object.keys(tree);
 
   const query = search.trim().toLowerCase();
 
-  // Filter: keep domains/categories/intents that match the search
   const filtered = domains.reduce<Record<string, Record<string, string[]>>>((acc, domain) => {
     const cats = tree[domain];
     const filteredCats = Object.keys(cats).reduce<Record<string, string[]>>((ca, cat) => {
@@ -140,15 +130,13 @@ export function IntentTreePage() {
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
-      {/* Header */}
       <div className="mb-6">
         <h2 className="text-xl font-bold text-slate-900">Intent Tree</h2>
         <p className="text-sm text-slate-500 mt-1">
-          {domains.length} domains · {totalIntents} leaf intents · hover over an intent to see its full path
+          {domains.length} domains · {totalIntents} leaf intents · hover over an intent to see its description
         </p>
       </div>
 
-      {/* Search */}
       <div className="mb-6 relative">
         <svg
           className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"
@@ -181,7 +169,6 @@ export function IntentTreePage() {
         <div className="text-center py-16 text-slate-400 text-sm">No intents match "{search}"</div>
       )}
 
-      {/* Domain cards */}
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-5">
         {filteredDomains.map((domain, di) => {
           const colors = DOMAIN_COLORS[di % DOMAIN_COLORS.length];
@@ -191,11 +178,7 @@ export function IntentTreePage() {
           const intentCount = Object.values(cats).reduce((s, arr) => s + arr.length, 0);
 
           return (
-            <div
-              key={domain}
-              className={`rounded-xl border ${colors.border} overflow-hidden shadow-sm`}
-            >
-              {/* Domain header */}
+            <div key={domain} className={`rounded-xl border ${colors.border} overflow-hidden shadow-sm`}>
               <button
                 onClick={() => toggleDomain(domain)}
                 className={`w-full flex items-center justify-between px-4 py-3 ${colors.header} ${colors.headerText} font-semibold text-sm text-left`}
@@ -217,7 +200,6 @@ export function IntentTreePage() {
                 </svg>
               </button>
 
-              {/* Categories */}
               {!isCollapsed && (
                 <div className="divide-y divide-slate-100 bg-white">
                   {Object.entries(cats).map(([category, intents]) => (
@@ -226,17 +208,22 @@ export function IntentTreePage() {
                         {category}
                       </p>
                       <div className="flex flex-wrap gap-1.5">
-                        {intents.map((intent) => (
-                          <IntentBadge
-                            key={intent}
-                            intent={intent}
-                            tooltip={intentDescription({ domain, category, intent })}
-                            badgeBg={colors.badgeBg}
-                            badgeText={colors.badgeText}
-                            badgeHover={colors.badgeHover}
-                            highlight={query && intent.toLowerCase().includes(query) ? query : ''}
-                          />
-                        ))}
+                        {intents.map((intent) => {
+                          const path = `${domain} > ${category} > ${intent}`;
+                          const desc = descriptions[path] || '';
+                          return (
+                            <IntentBadge
+                              key={intent}
+                              intent={intent}
+                              tooltipPath={`${domain}  ›  ${category}  ›  ${intent}`}
+                              tooltipDesc={desc}
+                              badgeBg={colors.badgeBg}
+                              badgeText={colors.badgeText}
+                              badgeHover={colors.badgeHover}
+                              highlight={query && intent.toLowerCase().includes(query) ? query : ''}
+                            />
+                          );
+                        })}
                       </div>
                     </div>
                   ))}
@@ -252,19 +239,18 @@ export function IntentTreePage() {
 
 interface IntentBadgeProps {
   intent: string;
-  tooltip: string;
+  tooltipPath: string;
+  tooltipDesc: string;
   badgeBg: string;
   badgeText: string;
   badgeHover: string;
   highlight: string;
 }
 
-function IntentBadge({ intent, tooltip, badgeBg, badgeText, badgeHover, highlight }: IntentBadgeProps) {
+function IntentBadge({ intent, tooltipPath, tooltipDesc, badgeBg, badgeText, badgeHover, highlight }: IntentBadgeProps) {
   const [visible, setVisible] = useState(false);
 
-  const label = highlight
-    ? highlightMatch(intent, highlight)
-    : <span>{intent}</span>;
+  const label = highlight ? highlightMatch(intent, highlight) : <span>{intent}</span>;
 
   return (
     <div className="relative inline-block">
@@ -276,13 +262,12 @@ function IntentBadge({ intent, tooltip, badgeBg, badgeText, badgeHover, highligh
         {label}
       </span>
 
-      {/* Tooltip */}
       {visible && (
-        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 pointer-events-none">
-          <div className="bg-slate-900 text-white text-xs rounded-lg px-3 py-2 whitespace-nowrap shadow-lg max-w-xs">
-            {tooltip}
+        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 pointer-events-none w-72">
+          <div className="bg-slate-900 text-white text-xs rounded-lg px-3 py-2.5 shadow-lg">
+            <div className="font-semibold text-slate-300 mb-1">{tooltipPath}</div>
+            {tooltipDesc && <div className="text-slate-400 leading-relaxed">{tooltipDesc}.</div>}
           </div>
-          {/* Arrow */}
           <div className="flex justify-center">
             <div className="w-2 h-2 bg-slate-900 rotate-45 -mt-1" />
           </div>

@@ -53,4 +53,14 @@ async def get_intent_tree():
         for intents in domain_cats.values()
         for intent in intents
     ]
-    return {"tree": tree, "all_leaves": all_leaves}
+    # Build a flat descriptions map keyed by full path strings
+    full = intent_tree_store.get_full_tree()
+    descriptions: dict[str, str] = {}
+    for domain, domain_data in full.items():
+        descriptions[domain] = domain_data.get("description", "").split(".")[0]
+        for category, cat_data in domain_data.get("categories", {}).items():
+            descriptions[f"{domain} > {category}"] = cat_data.get("description", "").split(".")[0]
+            for intent_name, intent_data in cat_data.get("intents", {}).items():
+                desc = intent_data.get("description", "") if isinstance(intent_data, dict) else intent_data
+                descriptions[f"{domain} > {category} > {intent_name}"] = desc.split(".")[0]
+    return {"tree": tree, "all_leaves": all_leaves, "descriptions": descriptions}

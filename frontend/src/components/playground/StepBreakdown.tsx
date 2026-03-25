@@ -1,9 +1,42 @@
 import React, { useState } from 'react';
-import type { ClassifyStep } from '../../types';
+import type { ClassifyStep, Vote } from '../../types';
 import { ConfidenceBadge } from '../shared/ConfidenceBadge';
 
 interface Props {
   steps: ClassifyStep[];
+}
+
+function VoteRow({ vote, isWinner }: { vote: Vote; isWinner: boolean }) {
+  const [showRaw, setShowRaw] = useState(false);
+  return (
+    <div className="text-xs border border-slate-100 rounded-lg overflow-hidden">
+      <div className="flex items-start gap-3 p-2">
+        <div className="min-w-0 flex-1 flex items-center gap-2">
+          <span className="font-mono text-slate-400 truncate max-w-24">{vote.model_id.slice(0, 8)}…</span>
+          <span className={`font-semibold ${isWinner ? 'text-green-700' : 'text-slate-500'}`}>
+            → {vote.choice}
+          </span>
+          <ConfidenceBadge value={vote.confidence} size="sm" />
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-slate-400 truncate max-w-48">{vote.reasoning}</span>
+          {vote.raw_output && (
+            <button
+              onClick={() => setShowRaw(v => !v)}
+              className="shrink-0 text-indigo-500 hover:text-indigo-700 font-medium transition-colors"
+            >
+              {showRaw ? 'hide raw' : 'raw'}
+            </button>
+          )}
+        </div>
+      </div>
+      {showRaw && vote.raw_output && (
+        <pre className="bg-slate-950 text-green-400 text-xs font-mono p-3 overflow-x-auto border-t border-slate-200 whitespace-pre-wrap break-all">
+          {vote.raw_output}
+        </pre>
+      )}
+    </div>
+  );
 }
 
 const LEVEL_COLORS = {
@@ -53,20 +86,7 @@ export const StepBreakdown: React.FC<Props> = ({ steps }) => {
                 </div>
                 <div className="space-y-2">
                   {step.votes.map((vote, vi) => (
-                    <div key={vi} className="flex items-start gap-3 text-xs">
-                      <div className="min-w-0 flex-1 flex items-center gap-2">
-                        <span className="font-mono text-slate-400 truncate max-w-24">{vote.model_id.slice(0, 8)}…</span>
-                        <span
-                          className={`font-semibold ${
-                            vote.choice === step.chosen ? 'text-green-700' : 'text-slate-500'
-                          }`}
-                        >
-                          → {vote.choice}
-                        </span>
-                        <ConfidenceBadge value={vote.confidence} size="sm" />
-                      </div>
-                      <div className="text-slate-400 flex-1 truncate">{vote.reasoning}</div>
-                    </div>
+                    <VoteRow key={vi} vote={vote} isWinner={vote.choice === step.chosen} />
                   ))}
                 </div>
                 <div className="mt-3 text-xs text-slate-400">

@@ -46,7 +46,7 @@ async def _call_single_model(
     else:
         user = hierarchical_user_prompt(query, level, candidates, chosen_domain, chosen_category, descriptions, examples_map)
     try:
-        parsed, _ = await call_llm_parsed(model, system, user)
+        parsed, resp = await call_llm_parsed(model, system, user)
         choice = parsed.get("choice", "")
         # Validate choice is in candidates
         if choice not in candidates:
@@ -58,6 +58,7 @@ async def _call_single_model(
             choice=choice,
             confidence=normalize(parsed.get("confidence", 0.5)),
             reasoning=parsed.get("reasoning", ""),
+            raw_output=resp.content,
         )
     except LLMCallError:
         return None
