@@ -66,16 +66,18 @@ async def _call_openai(
     from openai import AsyncOpenAI
 
     client = AsyncOpenAI(api_key=model.api_key)
-    response = await client.chat.completions.create(
-        model=model.model_name,
-        messages=[
+    kwargs: dict = {
+        "model": model.model_name,
+        "messages": [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt},
         ],
-        max_tokens=model.max_tokens,
-        temperature=model.temperature,
-        response_format={"type": "json_object"},
-    )
+        "max_completion_tokens": model.max_tokens,
+        "temperature": model.temperature,
+    }
+    if model.use_json_mode:
+        kwargs["response_format"] = {"type": "json_object"}
+    response = await client.chat.completions.create(**kwargs)
     latency_ms = int((time.monotonic() - start) * 1000)
     content = response.choices[0].message.content or ""
     usage = response.usage

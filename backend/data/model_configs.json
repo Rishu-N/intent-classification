@@ -8,9 +8,10 @@
     "size": "small",
     "cost_per_1m_input_tokens": 0.4,
     "cost_per_1m_output_tokens": 1.6,
-    "max_tokens": 512,
+    "max_tokens": 20000,
     "temperature": 0.0,
-    "enabled": true
+    "enabled": true,
+    "use_json_mode": true
   },
   {
     "id": "b0002106-4fe6-4f88-9330-9663264f7f6c",
@@ -21,9 +22,10 @@
     "size": "large",
     "cost_per_1m_input_tokens": 0.4,
     "cost_per_1m_output_tokens": 1.6,
-    "max_tokens": 512,
+    "max_tokens": 75000,
     "temperature": 0.0,
-    "enabled": true
+    "enabled": true,
+    "use_json_mode": true
   },
   {
     "id": "4b8bf021-1850-4fdc-8c0b-ba678227d725",
@@ -34,8 +36,9 @@
     "size": "large",
     "cost_per_1m_input_tokens": 2.0,
     "cost_per_1m_output_tokens": 8.0,
-    "max_tokens": 4096,
+    "max_tokens": 75000,
     "temperature": 0.0,
-    "enabled": true
+    "enabled": true,
+    "use_json_mode": false
   }
 ]
