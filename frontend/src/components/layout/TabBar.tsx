@@ -9,6 +9,7 @@ const TABS: Tab[] = [
   { id: 'playground', label: 'Playground' },
   { id: 'testcases', label: 'Test Cases' },
   { id: 'models', label: 'Model Config' },
+  { id: 'intents', label: 'Intent Tree' },
 ];
 
 interface Props {
