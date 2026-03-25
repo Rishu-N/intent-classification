@@ -231,8 +231,10 @@ def flat_user_prompt(query: str, full_tree: dict) -> str:
 _LEVEL_GUIDANCE = {
     "domain": """\
 At this step you are identifying the DOMAIN — the broadest subject area the query belongs to.
-Think of the domain as the "department" that would handle this query.
-Ask yourself: What is the overarching topic of this query? What field of life does it touch?""",
+CRITICAL: Classify by WHAT THE USER WANTS TO DO, not just what the subject mentions.
+The FORM of the request (write code, learn concept, book travel) overrides the subject matter.
+Ask yourself: Is the user asking for CODE to be written? A CONCEPT to be explained? \
+A TRANSACTION to be made? Use that to pick the domain.""",
 
     "category": """\
 The domain has already been identified. At this step you are identifying the CATEGORY — \
@@ -250,27 +252,52 @@ Ask yourself: What is the user's single primary goal with this query?""",
 _LEVEL_DISAMBIGUATION = {
     "domain": """\
 DISAMBIGUATION RULES FOR DOMAIN SELECTION:
-  • If the query involves an existing order, account, payment, or specific product purchase → Customer Support
-  • If the query involves flights, hotels, trip planning, or travel documents → Travel
-  • If the query involves writing, fixing, or designing software/code → Coding
+
+  ★ FORM-FIRST OVERRIDE — Apply this BEFORE all other rules:
+    The FORM of the request overrides the subject matter of the query.
+    If the user is asking for CODE TO BE WRITTEN, classify as Coding — even if the \
+subject is travel, finance, healthcare, shopping, etc.
+    CODE REQUEST SIGNALS: "I want code", "write code", "code to", "write a script", \
+"write a function", "help me code", "generate code", "implement", "API to", "program to", \
+"build a script", "automate with code", "how do I implement"
+    EXAMPLES (all → Coding, NOT the subject domain):
+      "I want code to book a flight on Indigo" → Coding (user wants CODE, not a flight)
+      "Write a script to check my bank balance" → Coding (user wants CODE, not banking)
+      "Function to calculate drug dosage" → Coding (user wants CODE, not healthcare)
+      "API to search for hotels in Paris" → Coding (user wants CODE, not travel)
+      "Python script to file taxes automatically" → Coding (user wants CODE, not taxes)
+    CONTRAST: "Book me a flight to Paris" → Travel (user wants to travel, not write code)
+
+  • If the query involves an existing order, account, payment, or product purchase → Customer Support
+  • If the query involves ACTUALLY travelling — booking flights, finding hotels, planning a trip, \
+visa/passport info — AND is NOT a code request → Travel
+  • If the query involves WRITING, FIXING, or DESIGNING code/software → Coding
   • If the query involves health symptoms, medications, or fitness/diet → Healthcare
   • If the query involves bank accounts, stocks/investments, or taxes → Finance
-  • If the query involves learning a concept, studying for exams, or academic work → Education
+  • If the query involves LEARNING a concept, studying for exams, or academic work → Education
+    (DISTINGUISH from Coding: "explain how APIs work" → Education; "write an API for me" → Coding)
   • Only use General if NO domain fits even at low confidence""",
 
     "category": """\
 DISAMBIGUATION RULES FOR CATEGORY SELECTION:
   • Read the full description of each category candidate carefully.
   • Choose based on what the user specifically needs — not just the topic.
-  • When in doubt between two categories, ask: "Which description most specifically describes what the user wants?"
-  • Prefer the more specific category over the more general one.""",
+  • When in doubt between two categories, ask: "Which description most specifically \
+describes what the user wants to DO or KNOW?"
+  • Prefer the more specific category over the more general one.
+  • If the chosen domain was Coding, ask: is the user writing NEW code (→ Code Generation), \
+FIXING broken code (→ Debugging), or DESIGNING a system (→ System Design)?""",
 
     "intent": """\
 DISAMBIGUATION RULES FOR INTENT SELECTION:
   • At this level, differences between intents are subtle — read every description carefully.
-  • Look for ACTION words in the query: 'track' vs 'cancel' vs 'modify' etc.
-  • The example queries are your strongest signal — find the examples closest to the user's query.
-  • If unsure between two intents, lower your confidence score (< 0.6) rather than guessing blindly.""",
+  • Look for ACTION words in the query: 'track' vs 'cancel' vs 'modify', \
+'cheapest' vs 'fastest' vs 'status', 'function' vs 'script' vs 'API'.
+  • The example queries under each candidate are your strongest signal — \
+find which examples are closest to the user's query.
+  • If the user's query contains a TECHNOLOGY NAME or PLATFORM (Stripe, Indigo, OpenAI, etc.), \
+check if any intent specifically covers integration/API work.
+  • If unsure between two intents, lower your confidence score (< 0.6) rather than guessing.""",
 }
 
 
