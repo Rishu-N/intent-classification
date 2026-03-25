@@ -1,8 +1,11 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 import time
 from typing import Literal, Optional
+
+logger = logging.getLogger(__name__)
 
 from backend.models.schemas import (
     ClassifyStepSchema,
@@ -60,7 +63,8 @@ async def _call_single_model(
             reasoning=parsed.get("reasoning", ""),
             raw_output=resp.content,
         )
-    except LLMCallError:
+    except LLMCallError as exc:
+        logger.error("Model %s failed at level %s: %s", model.id, level, exc)
         return None
 
 

@@ -42,3 +42,6 @@ Thumbs.db
 # Logs
 *.log
 logs/
+
+# Local data with secrets (API keys) — never commit
+backend/data/model_configs.json
