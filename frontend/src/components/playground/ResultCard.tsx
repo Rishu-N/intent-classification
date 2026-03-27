@@ -15,6 +15,7 @@ const Field: React.FC<{ label: string; value: React.ReactNode }> = ({ label, val
 
 export const ResultCard: React.FC<Props> = ({ result }) => {
   const isHierarchical = result.mode === 'hierarchical';
+  const isHybrid = result.mode === 'hybrid';
   const latencyMs = isHierarchical ? result.total_latency_ms : result.latency_ms;
   const costUsd = isHierarchical ? result.total_cost_usd : result.cost_usd;
 
@@ -51,6 +52,9 @@ export const ResultCard: React.FC<Props> = ({ result }) => {
         {!isHierarchical && 'model_used' in result && (
           <Field label="Model" value={result.model_used} />
         )}
+        {isHybrid && 'embedding_latency_ms' in result && (
+          <Field label="Embedding Latency" value={`${result.embedding_latency_ms} ms`} />
+        )}
       </dl>
 
       {/* Reasoning */}
@@ -69,6 +73,33 @@ export const ResultCard: React.FC<Props> = ({ result }) => {
               ))}
         </div>
       </div>
+
+      {isHybrid && 'candidate_intents' in result && result.candidate_intents.length > 0 && (
+        <div className="border-t border-slate-100 pt-4">
+          <div className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">
+            Embedding Candidates
+            {result.query_words?.length > 0 && (
+              <span className="ml-2 normal-case font-normal text-slate-400">
+                (words: {result.query_words.join(', ')})
+              </span>
+            )}
+          </div>
+          <div className="space-y-1">
+            {result.candidate_intents.map((c, i) => (
+              <div key={i} className="flex items-center justify-between text-sm bg-slate-50 rounded px-3 py-1.5">
+                <span className="text-slate-700">
+                  {c.domain} › {c.category} › <span className="font-medium">{c.intent}</span>
+                </span>
+                <span className={`text-xs font-mono ${
+                  c.similarity_score >= 0.5 ? 'text-green-600' : c.similarity_score >= 0.3 ? 'text-yellow-600' : 'text-slate-400'
+                }`}>
+                  {(c.similarity_score * 100).toFixed(1)}%
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {result.fallback_triggered && result.fallback_reason && (
         <div className="text-xs text-orange-700 bg-orange-50 rounded p-2">

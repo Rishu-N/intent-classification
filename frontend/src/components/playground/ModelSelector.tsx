@@ -23,6 +23,7 @@ export const ModelSelector: React.FC<Props> = ({ models }) => {
 
   const smallModels = models.filter((m) => m.size === 'small' && m.enabled);
   const largeModels = models.filter((m) => m.size === 'large' && m.enabled);
+  const openaiModels = models.filter((m) => m.provider === 'openai' && m.enabled);
 
   const toggleSmall = (id: string) => {
     setSmallLLMs(
@@ -127,6 +128,35 @@ export const ModelSelector: React.FC<Props> = ({ models }) => {
               ))}
             </select>
           )}
+        </div>
+      )}
+
+      {mode === 'hybrid' && (
+        <div className="space-y-3">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              OpenAI Model (for embeddings + classification)
+            </label>
+            {openaiModels.length === 0 ? (
+              <p className="text-sm text-slate-400 italic">
+                No OpenAI models configured. Hybrid mode requires an OpenAI model for embedding API access.
+              </p>
+            ) : (
+              <select
+                value={selectedLargeLLM || ''}
+                onChange={(e) => setLargeLLM(e.target.value || null)}
+                className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              >
+                <option value="">Select a model...</option>
+                {openaiModels.map((m) => (
+                  <option key={m.id} value={m.id}>{m.display_name}</option>
+                ))}
+              </select>
+            )}
+          </div>
+          <p className="text-xs text-slate-500">
+            Splits query into words, finds top 3 similar intents per word via embeddings, then classifies with the selected LLM.
+          </p>
         </div>
       )}
 

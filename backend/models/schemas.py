@@ -63,9 +63,36 @@ class HierarchicalResultSchema(BaseModel):
     fallback_step_used: Optional[int] = None
 
 
+class CandidateIntent(BaseModel):
+    intent: str
+    domain: str
+    category: str
+    similarity_score: float
+
+
+class HybridResultSchema(BaseModel):
+    mode: Literal["hybrid"] = "hybrid"
+    query: str
+    final_intent: str
+    domain: str
+    category: str
+    confidence: float
+    reasoning: str
+    model_used: str
+    tokens: TokenUsage
+    cost_usd: float
+    latency_ms: int
+    embedding_latency_ms: int = 0
+    query_words: list[str] = []
+    candidate_intents: list[CandidateIntent] = []
+    cache_hit: bool = False
+    fallback_triggered: bool = False
+    fallback_reason: Optional[str] = None
+
+
 class ClassifyRequest(BaseModel):
     query: str
-    mode: Literal["hierarchical", "flat"]
+    mode: Literal["hierarchical", "flat", "hybrid"]
     small_llm_ids: list[str] = []
     large_llm_id: Optional[str] = None
     use_cache: bool = True
@@ -153,7 +180,7 @@ class BatchRunResult(BaseModel):
 
 
 class BatchRunRequest(BaseModel):
-    mode: Literal["hierarchical", "flat"]
+    mode: Literal["hierarchical", "flat", "hybrid"]
     small_llm_ids: list[str] = []
     large_llm_id: Optional[str] = None
     test_case_ids: list[str] | Literal["all"] = "all"

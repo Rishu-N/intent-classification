@@ -1,13 +1,14 @@
 from fastapi import APIRouter, HTTPException
-from backend.models.schemas import ClassifyRequest, FlatResultSchema, HierarchicalResultSchema
+from backend.models.schemas import ClassifyRequest, FlatResultSchema, HierarchicalResultSchema, HybridResultSchema
 from backend.services.classifier_flat import classify_flat
 from backend.services.classifier_hierarchical import classify_hierarchical
+from backend.services.classifier_hybrid import classify_hybrid
 from backend.services import model_store, intent_tree_store
 
 router = APIRouter(prefix="/classify", tags=["classify"])
 
 
-@router.post("", response_model=FlatResultSchema | HierarchicalResultSchema)
+@router.post("", response_model=FlatResultSchema | HierarchicalResultSchema | HybridResultSchema)
 async def classify(req: ClassifyRequest):
     tree = intent_tree_store.get_tree()
 
@@ -18,6 +19,16 @@ async def classify(req: ClassifyRequest):
         if not model:
             raise HTTPException(404, f"Model {req.large_llm_id!r} not found")
         return await classify_flat(req.query, model, tree, use_cache=req.use_cache)
+
+    elif req.mode == "hybrid":
+        if not req.large_llm_id:
+            raise HTTPException(400, "large_llm_id is required for hybrid mode")
+        model = model_store.get_by_id(req.large_llm_id)
+        if not model:
+            raise HTTPException(404, f"Model {req.large_llm_id!r} not found")
+        if model.provider != "openai":
+            raise HTTPException(400, "Hybrid mode requires an OpenAI model (for embedding API)")
+        return await classify_hybrid(req.query, model, tree, use_cache=req.use_cache)
 
     else:  # hierarchical
         if not req.small_llm_ids:

@@ -73,6 +73,27 @@ def flat_user_prompt(query: str, tree: dict) -> str:
     return f'Query: "{query}"\n\n{intents_text}\n\nRespond with JSON only.'
 
 
+def hybrid_system_prompt() -> str:
+    return (
+        "You are an intent classification engine. Given a user query and a short list of "
+        "candidate intents (pre-filtered by semantic similarity), identify the single "
+        "best-matching intent.\n"
+        "Return ONLY valid JSON in this exact shape:\n"
+        '{"intent": "<intent name>", "domain": "<domain>", "category": "<category>", '
+        '"confidence": <0.0-1.0>, "reasoning": "<one concise sentence>"}\n'
+        f"{CONFIDENCE_SCALE}\n"
+        "Do not include any text outside the JSON."
+    )
+
+
+def hybrid_user_prompt(query: str, candidates: list[dict]) -> str:
+    lines = ["Candidate intents (domain > category > intent):"]
+    for c in candidates:
+        lines.append(f"  {c['domain']} > {c['category']} > {c['intent']}")
+    candidates_text = "\n".join(lines)
+    return f'Query: "{query}"\n\n{candidates_text}\n\nRespond with JSON only.'
+
+
 def hierarchical_system_prompt(level: str) -> str:
     return (
         f"You are classifying a user query step by step. At this step you are choosing the best {level}.\n"

@@ -11,6 +11,7 @@ import type { ClassifyMode } from '../../types';
 const MODE_OPTIONS: { value: ClassifyMode; label: string; desc: string }[] = [
   { value: 'hierarchical', label: 'Hierarchical', desc: 'Multiple small LLMs, level-by-level with ensemble' },
   { value: 'flat', label: 'Flat', desc: 'Single large LLM, all intents at once' },
+  { value: 'hybrid', label: 'Hybrid', desc: 'Embedding narrows candidates per word, then small LLM classifies' },
 ];
 
 export const PlaygroundPage: React.FC = () => {

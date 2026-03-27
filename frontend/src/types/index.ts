@@ -1,6 +1,6 @@
 export type Provider = 'openai' | 'anthropic';
 export type ModelSize = 'small' | 'large';
-export type ClassifyMode = 'hierarchical' | 'flat';
+export type ClassifyMode = 'hierarchical' | 'flat' | 'hybrid';
 export type Level = 'domain' | 'category' | 'intent';
 export type EnsembleMethod = 'majority' | 'weighted';
 
@@ -90,7 +90,34 @@ export interface HierarchicalResult {
   fallback_step_used: number | null;
 }
 
-export type ClassifyResult = FlatResult | HierarchicalResult;
+export interface CandidateIntent {
+  intent: string;
+  domain: string;
+  category: string;
+  similarity_score: number;
+}
+
+export interface HybridResult {
+  mode: 'hybrid';
+  query: string;
+  final_intent: string;
+  domain: string;
+  category: string;
+  confidence: number;
+  reasoning: string;
+  model_used: string;
+  tokens: TokenUsage;
+  cost_usd: number;
+  latency_ms: number;
+  embedding_latency_ms: number;
+  query_words: string[];
+  candidate_intents: CandidateIntent[];
+  cache_hit: boolean;
+  fallback_triggered: boolean;
+  fallback_reason: string | null;
+}
+
+export type ClassifyResult = FlatResult | HierarchicalResult | HybridResult;
 
 export interface ClassifyRequest {
   query: string;

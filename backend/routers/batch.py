@@ -15,6 +15,7 @@ from backend.models.schemas import (
 from backend.services import model_store, test_case_store, intent_tree_store
 from backend.services.classifier_flat import classify_flat
 from backend.services.classifier_hierarchical import classify_hierarchical
+from backend.services.classifier_hybrid import classify_hybrid
 
 router = APIRouter(prefix="/batch", tags=["batch"])
 
@@ -47,7 +48,17 @@ async def run_batch(req: BatchRunRequest):
             raise HTTPException(404, f"Model {req.large_llm_id!r} not found")
         model_label = large_model.display_name
 
-    else:
+    elif req.mode == "hybrid":
+        if not req.large_llm_id:
+            raise HTTPException(400, "large_llm_id required for hybrid mode")
+        hybrid_model = model_store.get_by_id(req.large_llm_id)
+        if not hybrid_model:
+            raise HTTPException(404, f"Model {req.large_llm_id!r} not found")
+        if hybrid_model.provider != "openai":
+            raise HTTPException(400, "Hybrid mode requires an OpenAI model (for embedding API)")
+        model_label = f"{hybrid_model.display_name} (hybrid)"
+
+    else:  # hierarchical
         if not req.small_llm_ids:
             raise HTTPException(400, "small_llm_ids required for hierarchical mode")
         small_models = [model_store.get_by_id(mid) for mid in req.small_llm_ids]
@@ -65,6 +76,15 @@ async def run_batch(req: BatchRunRequest):
             if req.mode == "flat":
                 res = await classify_flat(
                     case.input_prompt, large_model, tree, use_cache=req.use_cache
+                )
+                predicted = res.final_intent
+                confidence = res.confidence
+                latency_ms = res.latency_ms
+                cost_usd = res.cost_usd
+                fallback = res.fallback_triggered
+            elif req.mode == "hybrid":
+                res = await classify_hybrid(
+                    case.input_prompt, hybrid_model, tree, use_cache=req.use_cache
                 )
                 predicted = res.final_intent
                 confidence = res.confidence

@@ -9,6 +9,7 @@ export const BatchRunConfig: React.FC = () => {
 
   const smallModels = models.filter((m) => m.size === 'small' && m.enabled);
   const largeModels = models.filter((m) => m.size === 'large' && m.enabled);
+  const openaiModels = models.filter((m) => m.provider === 'openai' && m.enabled);
 
   const toggleSmall = (id: string) => {
     const ids = config.smallLLMIds.includes(id)
@@ -22,8 +23,8 @@ export const BatchRunConfig: React.FC = () => {
       <h3 className="text-base font-semibold text-slate-800">Run Batch</h3>
 
       {/* Mode */}
-      <div className="flex gap-3">
-        {(['hierarchical', 'flat'] as ClassifyMode[]).map((m) => (
+      <div className="flex gap-3 flex-wrap">
+        {(['hierarchical', 'flat', 'hybrid'] as ClassifyMode[]).map((m) => (
           <label key={m} className={`flex items-center gap-2 px-4 py-2 rounded-lg border cursor-pointer text-sm ${
             config.mode === m ? 'border-indigo-500 bg-indigo-50 text-indigo-700 font-medium' : 'border-slate-200 text-slate-600'
           }`}>
@@ -94,6 +95,21 @@ export const BatchRunConfig: React.FC = () => {
             <option value="">Select a model...</option>
             {largeModels.map((m) => <option key={m.id} value={m.id}>{m.display_name}</option>)}
           </select>
+        </div>
+      )}
+
+      {config.mode === 'hybrid' && (
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1">OpenAI Model (embeddings + classification)</label>
+          <select value={config.largeLLMId || ''}
+            onChange={(e) => setConfig({ largeLLMId: e.target.value || null })}
+            className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <option value="">Select a model...</option>
+            {openaiModels.map((m) => <option key={m.id} value={m.id}>{m.display_name}</option>)}
+          </select>
+          <p className="text-xs text-slate-500 mt-1">
+            Top 3 intents per word via embeddings, then LLM classifies.
+          </p>
         </div>
       )}
 
