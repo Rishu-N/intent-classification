@@ -1,8 +1,11 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 import time
 from typing import Literal, Optional
+
+logger = logging.getLogger(__name__)
 
 from backend.models.schemas import (
     ClassifyStepSchema,
@@ -14,6 +17,7 @@ from backend.models.schemas import (
 from backend.services.cache import cache
 from backend.services.cost_tracker import compute_cost, sum_costs
 from backend.services.ensemble import run_ensemble
+from backend.services import intent_tree_store
 from backend.services.llm_provider import LLMCallError, call_llm_parsed
 from backend.utils.confidence import normalize, joint_confidence
 from backend.utils.prompt_builder import (
@@ -36,27 +40,34 @@ async def _call_single_model(
     chosen_domain: Optional[str],
     chosen_category: Optional[str],
     is_retry: bool = False,
+    descriptions: dict[str, str] = {},
+    examples_map: dict[str, list[str]] = {},
 ) -> Optional[VoteSchema]:
     system = hierarchical_system_prompt(level)
     if is_retry:
-        user = retry_user_prompt(query, level, candidates, chosen_domain, chosen_category)
+        user = retry_user_prompt(query, level, candidates, chosen_domain, chosen_category, descriptions, examples_map)
     else:
-        user = hierarchical_user_prompt(query, level, candidates, chosen_domain, chosen_category)
+        user = hierarchical_user_prompt(query, level, candidates, chosen_domain, chosen_category, descriptions, examples_map)
     try:
-        parsed, _ = await call_llm_parsed(model, system, user)
+        parsed, resp = await call_llm_parsed(model, system, user)
         choice = parsed.get("choice", "")
         # Validate choice is in candidates
         if choice not in candidates:
             # Try case-insensitive match
             lower_map = {c.lower(): c for c in candidates}
             choice = lower_map.get(choice.lower(), candidates[0])
+        tokens = resp.tokens
         return VoteSchema(
             model_id=model.id,
             choice=choice,
             confidence=normalize(parsed.get("confidence", 0.5)),
             reasoning=parsed.get("reasoning", ""),
+            raw_output=resp.content,
+            tokens=tokens,
+            cost_usd=compute_cost(model, tokens),
         )
-    except LLMCallError:
+    except LLMCallError as exc:
+        logger.error("Model %s failed at level %s: %s", model.id, level, exc)
         return None
 
 
@@ -70,7 +81,9 @@ async def _classify_level(
     chosen_domain: Optional[str] = None,
     chosen_category: Optional[str] = None,
     backup_model: Optional[ModelConfigSchema] = None,
-) -> tuple[ClassifyStepSchema, bool, Optional[str]]:
+    descriptions: dict[str, str] = {},
+    examples_map: dict[str, list[str]] = {},
+) -> tuple[ClassifyStepSchema, bool, Optional[str], float]:
     """
     Returns (step, fallback_triggered, fallback_reason).
     """
@@ -79,7 +92,7 @@ async def _classify_level(
 
     # Fan-out: call all models concurrently
     raw_votes = await asyncio.gather(
-        *[_call_single_model(m, level, query, candidates, chosen_domain, chosen_category)
+        *[_call_single_model(m, level, query, candidates, chosen_domain, chosen_category, descriptions=descriptions, examples_map=examples_map)
           for m in models],
         return_exceptions=False,
     )
@@ -103,7 +116,7 @@ async def _classify_level(
     # Retry if confidence is low
     if confidence < confidence_threshold and not fallback_triggered:
         retry_votes_raw = await asyncio.gather(
-            *[_call_single_model(m, level, query, candidates, chosen_domain, chosen_category, is_retry=True)
+            *[_call_single_model(m, level, query, candidates, chosen_domain, chosen_category, is_retry=True, descriptions=descriptions, examples_map=examples_map)
               for m in models],
             return_exceptions=False,
         )
@@ -125,7 +138,7 @@ async def _classify_level(
     # Backup model fallback (use large LLM on subtree)
     if fallback_triggered and backup_model and confidence < confidence_threshold:
         backup_vote = await _call_single_model(
-            backup_model, level, query, candidates, chosen_domain, chosen_category
+            backup_model, level, query, candidates, chosen_domain, chosen_category, descriptions=descriptions, examples_map=examples_map
         )
         if backup_vote:
             votes = [backup_vote]
@@ -151,6 +164,13 @@ async def _classify_level(
 
     latency_ms = int((time.monotonic() - level_start) * 1000)
 
+    # Aggregate tokens and cost from all votes at this level
+    total_tokens = TokenUsage(
+        input=sum(v.tokens.input for v in votes),
+        output=sum(v.tokens.output for v in votes),
+    )
+    total_cost = sum(v.cost_usd for v in votes)
+
     step = ClassifyStepSchema(
         level=level,
         chosen=chosen,
@@ -162,7 +182,7 @@ async def _classify_level(
         latency_ms=latency_ms,
         tokens=total_tokens,
     )
-    return step, fallback_triggered, fallback_reason
+    return step, fallback_triggered, fallback_reason, total_cost
 
 
 async def classify_hierarchical(
@@ -187,26 +207,34 @@ async def classify_hierarchical(
     domains = list(tree.keys())
 
     # Level 1: Domain
-    step1, fb1, fr1 = await _classify_level(
+    domain_descs = intent_tree_store.get_domains_with_desc()
+    domain_examples = {d: intent_tree_store.get_domain_examples(d) for d in domains}
+    step1, fb1, fr1, cost1 = await _classify_level(
         query, domains, "domain", models, ensemble_method, confidence_threshold,
-        backup_model=backup_model,
+        backup_model=backup_model, descriptions=domain_descs, examples_map=domain_examples,
     )
     chosen_domain = step1.chosen
 
     # Level 2: Category
     categories = list(tree.get(chosen_domain, {FALLBACK_CATEGORY: []}).keys())
-    step2, fb2, fr2 = await _classify_level(
+    category_descs = intent_tree_store.get_categories_with_desc(chosen_domain)
+    category_examples = {c: intent_tree_store.get_category_examples(chosen_domain, c) for c in categories}
+    step2, fb2, fr2, cost2 = await _classify_level(
         query, categories, "category", models, ensemble_method, confidence_threshold,
         chosen_domain=chosen_domain, backup_model=backup_model,
+        descriptions=category_descs, examples_map=category_examples,
     )
     chosen_category = step2.chosen
 
     # Level 3: Intent
     intents = tree.get(chosen_domain, {}).get(chosen_category, [FALLBACK_INTENT])
-    step3, fb3, fr3 = await _classify_level(
+    intents_full = intent_tree_store.get_intents_full(chosen_domain, chosen_category)
+    intent_descs = {name: data.get("description", "") for name, data in intents_full.items()}
+    intent_examples = {name: data.get("examples", []) for name, data in intents_full.items()}
+    step3, fb3, fr3, cost3 = await _classify_level(
         query, intents, "intent", models, ensemble_method, confidence_threshold,
         chosen_domain=chosen_domain, chosen_category=chosen_category,
-        backup_model=backup_model,
+        backup_model=backup_model, descriptions=intent_descs, examples_map=intent_examples,
     )
 
     steps = [step1, step2, step3]
@@ -221,6 +249,12 @@ async def classify_hierarchical(
         1 if fb1 else (2 if fb2 else (3 if fb3 else None))
     )
 
+    total_cost_usd = sum_costs([cost1, cost2, cost3])
+    tokens_total = TokenUsage(
+        input=sum(s.tokens.input for s in steps),
+        output=sum(s.tokens.output for s in steps),
+    )
+
     result = HierarchicalResultSchema(
         query=query,
         final_intent=step3.chosen,
@@ -230,8 +264,8 @@ async def classify_hierarchical(
         min_step_confidence=round(min_conf, 4),
         steps=steps,
         total_latency_ms=total_latency_ms,
-        total_cost_usd=0.0,  # Token counts aggregated per model inside steps
-        tokens_total=TokenUsage(),
+        total_cost_usd=total_cost_usd,
+        tokens_total=tokens_total,
         fallback_triggered=fallback_triggered,
         fallback_reason=fallback_reason,
         fallback_step_used=fallback_step,

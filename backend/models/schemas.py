@@ -2,6 +2,9 @@ from __future__ import annotations
 from typing import Literal, Optional
 from pydantic import BaseModel, Field
 
+MAX_TOKENS_MIN = 1
+MAX_TOKENS_MAX = 100_000
+
 
 class TokenUsage(BaseModel):
     input: int = 0
@@ -13,6 +16,9 @@ class VoteSchema(BaseModel):
     choice: str
     confidence: float
     reasoning: str
+    raw_output: str = ""
+    tokens: TokenUsage = Field(default_factory=TokenUsage)
+    cost_usd: float = 0.0
 
 
 class ClassifyStepSchema(BaseModel):
@@ -43,6 +49,7 @@ class FlatResultSchema(BaseModel):
     cache_hit: bool = False
     fallback_triggered: bool = False
     fallback_reason: Optional[str] = None
+    raw_output: str = ""
 
 
 class HierarchicalResultSchema(BaseModel):
@@ -109,7 +116,7 @@ class ModelConfigSchema(BaseModel):
     size: Literal["small", "large"]
     cost_per_1m_input_tokens: float = 0.0
     cost_per_1m_output_tokens: float = 0.0
-    max_tokens: int = 20000
+    max_tokens: int = Field(default=20000, ge=MAX_TOKENS_MIN, le=MAX_TOKENS_MAX)
     temperature: float = 0.0
     enabled: bool = True
     # Set to False for models that don't support JSON mode (e.g. GPT-5, o-series)
@@ -124,7 +131,7 @@ class ModelConfigCreate(BaseModel):
     size: Literal["small", "large"]
     cost_per_1m_input_tokens: float = 0.0
     cost_per_1m_output_tokens: float = 0.0
-    max_tokens: int = 20000
+    max_tokens: int = Field(default=20000, ge=MAX_TOKENS_MIN, le=MAX_TOKENS_MAX)
     temperature: float = 0.0
     enabled: bool = True
     use_json_mode: bool = True

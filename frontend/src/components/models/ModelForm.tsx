@@ -18,7 +18,7 @@ const DEFAULTS: ModelConfigCreate = {
   size: 'small',
   cost_per_1m_input_tokens: 0,
   cost_per_1m_output_tokens: 0,
-  max_tokens: 512,
+  max_tokens: 4096,
   temperature: 0,
   enabled: true,
 };
@@ -170,8 +170,8 @@ export const ModelForm: React.FC<Props> = ({ initial, onSave, onCancel }) => {
           <label className="block text-sm font-medium text-slate-700 mb-1">Max Tokens</label>
           <input
             type="number"
-            min="64"
-            max="4096"
+            min="1"
+            max="100000"
             value={form.max_tokens}
             onChange={(e) => set({ max_tokens: parseInt(e.target.value) || 512 })}
             className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"

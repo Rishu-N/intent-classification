@@ -253,17 +253,29 @@ Final confidence = Level1.conf × Level2.conf × Level3.conf  (joint probability
 - Tiebreak by mean confidence of tied choices
 
 **Fallback logic** (triggers when ensemble confidence < threshold):
-1. **Retry** — same models, rephrased prompt with few-shot examples
+1. **Retry** — same models, escalated prompt with domain-specific few-shot examples and stronger disambiguation guidance
 2. **Backup model** — large LLM called on the remaining subtree only
 3. **Abstain** — returns `General → Miscellaneous → Ambiguous Query` with `fallback_triggered: true`
 
 ### Flat Classification
 
 ```
-User Query → Single prompt listing all ~50 intents → LLM picks one → Done
+User Query → Single prompt listing all ~50 intents with descriptions + examples → LLM picks one → Done
 ```
 
 One API call, lower latency, no step-by-step visibility.
+
+### Prompt Engineering
+
+Both classification modes use structured, richly-described prompts based on research-backed prompting techniques:
+
+- **Role + task definition** — system prompt clearly defines the classifier's role and the specific sub-task at each hierarchical level
+- **Chain-of-thought guidance** — at each hierarchical step the model is instructed to reason domain → category → intent before choosing
+- **Per-candidate descriptions** — every domain, category, and intent has a detailed description including key signals, disambiguation rules vs. similar intents, and edge cases
+- **Per-candidate examples** — each candidate includes 4–6 example queries to serve as few-shot anchors grounding the model's choice
+- **Explicit disambiguation rules** — the prompt includes level-specific rules for the most commonly confused pairs (e.g. Track vs Cancel Order, Debug Python vs Runtime Error)
+- **Calibrated confidence scale** — 6-point confidence scale with concrete language (e.g. "Unambiguous. Only one candidate could match") rather than vague ranges
+- **Escalating retry prompts** — on low-confidence retry, the prompt escalates with domain-specific few-shot examples and additional decision guidance
 
 ### Caching
 

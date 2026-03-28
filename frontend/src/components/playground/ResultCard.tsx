@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import type { ClassifyResult } from '../../types';
 import { ConfidenceBadge } from '../shared/ConfidenceBadge';
 
@@ -14,6 +14,7 @@ const Field: React.FC<{ label: string; value: React.ReactNode }> = ({ label, val
 );
 
 export const ResultCard: React.FC<Props> = ({ result }) => {
+  const [showRaw, setShowRaw] = useState(false);
   const isHierarchical = result.mode === 'hierarchical';
   const isHybrid = result.mode === 'hybrid';
   const latencyMs = isHierarchical ? result.total_latency_ms : result.latency_ms;
@@ -104,6 +105,61 @@ export const ResultCard: React.FC<Props> = ({ result }) => {
       {result.fallback_triggered && result.fallback_reason && (
         <div className="text-xs text-orange-700 bg-orange-50 rounded p-2">
           Fallback reason: {result.fallback_reason}
+        </div>
+      )}
+
+      {/* Raw LLM Output */}
+      {result.mode === 'flat' && result.raw_output && (
+        <div className="border-t border-slate-100 pt-4">
+          <button
+            onClick={() => setShowRaw(v => !v)}
+            className="flex items-center gap-2 text-xs font-medium text-indigo-600 hover:text-indigo-800 transition-colors"
+          >
+            <span>{showRaw ? '▼' : '▶'}</span>
+            <span>Raw LLM Output</span>
+          </button>
+          {showRaw && (
+            <pre className="mt-2 bg-slate-950 text-green-400 text-xs font-mono p-3 rounded-lg overflow-x-auto whitespace-pre-wrap break-all">
+              {result.raw_output}
+            </pre>
+          )}
+        </div>
+      )}
+
+      {result.mode === 'hierarchical' && result.steps?.some(s => s.votes.some(v => v.raw_output)) && (
+        <div className="border-t border-slate-100 pt-4">
+          <button
+            onClick={() => setShowRaw(v => !v)}
+            className="flex items-center gap-2 text-xs font-medium text-indigo-600 hover:text-indigo-800 transition-colors"
+          >
+            <span>{showRaw ? '▼' : '▶'}</span>
+            <span>Raw LLM Outputs ({result.steps.reduce((n, s) => n + s.votes.length, 0)} votes)</span>
+          </button>
+          {showRaw && (
+            <div className="mt-3 space-y-4">
+              {result.steps.map((step, si) => (
+                <div key={si}>
+                  <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">
+                    Step {si + 1} — {step.level}: <span className="text-slate-700 normal-case font-bold">{step.chosen}</span>
+                  </div>
+                  <div className="space-y-2">
+                    {step.votes.map((vote, vi) => (
+                      <div key={vi}>
+                        <div className="text-xs text-slate-400 mb-0.5 font-mono">
+                          {vote.model_id} → <span className="text-slate-600">{vote.choice}</span>
+                        </div>
+                        {vote.raw_output && (
+                          <pre className="bg-slate-950 text-green-400 text-xs font-mono p-3 rounded-lg overflow-x-auto whitespace-pre-wrap break-all">
+                            {vote.raw_output}
+                          </pre>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>

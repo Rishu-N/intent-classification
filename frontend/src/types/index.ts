@@ -41,6 +41,9 @@ export interface Vote {
   choice: string;
   confidence: number;
   reasoning: string;
+  raw_output?: string;
+  tokens?: TokenUsage;
+  cost_usd?: number;
 }
 
 export interface ClassifyStep {
@@ -70,6 +73,7 @@ export interface FlatResult {
   cache_hit: boolean;
   fallback_triggered: boolean;
   fallback_reason: string | null;
+  raw_output?: string;
 }
 
 export interface HierarchicalResult {
@@ -191,4 +195,5 @@ export interface BatchRunRequest {
 export interface IntentTree {
   tree: Record<string, Record<string, string[]>>;
   all_leaves: string[];
+  descriptions: Record<string, string>;
 }

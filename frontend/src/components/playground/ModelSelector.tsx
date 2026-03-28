@@ -6,6 +6,37 @@ interface Props {
   models: ModelConfig[];
 }
 
+function ModelPill({
+  model,
+  selected,
+  onClick,
+}: {
+  model: ModelConfig;
+  selected: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg border transition-colors ${
+        selected
+          ? 'bg-indigo-600 text-white border-indigo-600'
+          : 'bg-white text-slate-700 border-slate-300 hover:border-indigo-400'
+      }`}
+    >
+      <span>{model.display_name}</span>
+      <span
+        className={`text-xs px-1.5 py-0.5 rounded font-medium ${
+          selected ? 'bg-indigo-500 text-indigo-100' : 'bg-slate-100 text-slate-500'
+        }`}
+      >
+        {model.provider === 'openai' ? 'OAI' : 'ANT'} · {model.size}
+      </span>
+    </button>
+  );
+}
+
 export const ModelSelector: React.FC<Props> = ({ models }) => {
   const {
     mode,
@@ -21,16 +52,19 @@ export const ModelSelector: React.FC<Props> = ({ models }) => {
     setUseCache,
   } = useClassifyStore();
 
-  const smallModels = models.filter((m) => m.size === 'small' && m.enabled);
-  const largeModels = models.filter((m) => m.size === 'large' && m.enabled);
+  const enabledModels = models.filter((m) => m.enabled);
   const openaiModels = models.filter((m) => m.provider === 'openai' && m.enabled);
 
   const toggleSmall = (id: string) => {
     setSmallLLMs(
       selectedSmallLLMs.includes(id)
         ? selectedSmallLLMs.filter((x) => x !== id)
-        : [...selectedSmallLLMs, id]
+        : [...selectedSmallLLMs, id],
     );
+  };
+
+  const toggleBackup = (id: string) => {
+    setLargeLLM(selectedLargeLLM === id ? null : id);
   };
 
   return (
@@ -39,31 +73,25 @@ export const ModelSelector: React.FC<Props> = ({ models }) => {
         <>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-2">
-              Small LLMs for Ensemble (select multiple)
+              Models for Ensemble
+              <span className="ml-1 text-xs font-normal text-slate-400">(select one or more)</span>
             </label>
-            {smallModels.length === 0 ? (
-              <p className="text-sm text-slate-400 italic">
-                No small LLMs configured. Add models in the Model Config tab.
-              </p>
+            {enabledModels.length === 0 ? (
+              <p className="text-sm text-slate-400 italic">No models configured. Add models in the Model Config tab.</p>
             ) : (
               <div className="flex flex-wrap gap-2">
-                {smallModels.map((m) => (
-                  <button
+                {enabledModels.map((m) => (
+                  <ModelPill
                     key={m.id}
-                    type="button"
+                    model={m}
+                    selected={selectedSmallLLMs.includes(m.id)}
                     onClick={() => toggleSmall(m.id)}
-                    className={`px-3 py-1.5 text-sm rounded border transition-colors ${
-                      selectedSmallLLMs.includes(m.id)
-                        ? 'bg-indigo-600 text-white border-indigo-600'
-                        : 'bg-white text-slate-700 border-slate-300 hover:border-indigo-400'
-                    }`}
-                  >
-                    {m.display_name}
-                  </button>
+                  />
                 ))}
               </div>
             )}
           </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Ensemble Method</label>
@@ -91,42 +119,49 @@ export const ModelSelector: React.FC<Props> = ({ models }) => {
               />
             </div>
           </div>
+
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
-              Backup Model (Large LLM for fallback, optional)
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Fallback Model
+              <span className="ml-1 text-xs font-normal text-slate-400">(optional, used if confidence is low)</span>
             </label>
-            <select
-              value={selectedLargeLLM || ''}
-              onChange={(e) => setLargeLLM(e.target.value || null)}
-              className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            >
-              <option value="">None</option>
-              {largeModels.map((m) => (
-                <option key={m.id} value={m.id}>{m.display_name}</option>
-              ))}
-            </select>
+            {enabledModels.length === 0 ? (
+              <p className="text-sm text-slate-400 italic">No models configured.</p>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {enabledModels.map((m) => (
+                  <ModelPill
+                    key={m.id}
+                    model={m}
+                    selected={selectedLargeLLM === m.id}
+                    onClick={() => toggleBackup(m.id)}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         </>
       )}
 
       {mode === 'flat' && (
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-2">Large LLM</label>
-          {largeModels.length === 0 ? (
-            <p className="text-sm text-slate-400 italic">
-              No large LLMs configured. Add models in the Model Config tab.
-            </p>
+          <label className="block text-sm font-medium text-slate-700 mb-2">
+            Model
+            <span className="ml-1 text-xs font-normal text-slate-400">(select one)</span>
+          </label>
+          {enabledModels.length === 0 ? (
+            <p className="text-sm text-slate-400 italic">No models configured. Add models in the Model Config tab.</p>
           ) : (
-            <select
-              value={selectedLargeLLM || ''}
-              onChange={(e) => setLargeLLM(e.target.value || null)}
-              className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            >
-              <option value="">Select a model...</option>
-              {largeModels.map((m) => (
-                <option key={m.id} value={m.id}>{m.display_name}</option>
+            <div className="flex flex-wrap gap-2">
+              {enabledModels.map((m) => (
+                <ModelPill
+                  key={m.id}
+                  model={m}
+                  selected={selectedLargeLLM === m.id}
+                  onClick={() => setLargeLLM(selectedLargeLLM === m.id ? null : m.id)}
+                />
               ))}
-            </select>
+            </div>
           )}
         </div>
       )}
